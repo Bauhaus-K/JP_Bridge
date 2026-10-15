@@ -6,7 +6,7 @@ import { Alert } from "@/components/ui/alert";
 import { controlClass } from "@/components/ui/input";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { cn } from "@/lib/utils";
-import { requestPro, updatePrivacy, type SettingsState } from "./actions";
+import { deleteAccount, requestPro, updatePrivacy, type SettingsState } from "./actions";
 
 export function PrivacyForm({ allowTrainingUse }: { allowTrainingUse: boolean }) {
   const [state, action] = useActionState<SettingsState, FormData>(updatePrivacy, {});
@@ -58,6 +58,32 @@ export function ProRequestForm() {
         <Alert variant={state.ok ? "info" : "destructive"}>{state.message}</Alert>
       ) : null}
       <SubmitButton className="w-fit">프로 플랜 신청</SubmitButton>
+    </form>
+  );
+}
+
+export function DeleteAccountForm() {
+  const [state, action] = useActionState<SettingsState, FormData>(deleteAccount, {});
+  return (
+    <form action={action} className="grid gap-2">
+      <p className="text-sm text-muted-foreground">
+        계정과 ES·자기분석·면접·경력 번역 등 모든 데이터가 즉시 삭제되며 되돌릴 수 없습니다. 진행
+        중인 제휴사 연결은 자동으로 철회됩니다. 제휴사 정보 제공 동의·철회 기록만 법적 대응을 위해
+        가명 처리 후 3년간 보관됩니다.
+      </p>
+      <label htmlFor="delete-confirm" className="text-sm font-medium">
+        확인을 위해 &lsquo;탈퇴&rsquo;를 입력하세요
+      </label>
+      <input
+        id="delete-confirm"
+        name="confirm"
+        autoComplete="off"
+        className={cn(controlClass, "h-10 w-48")}
+      />
+      {state.message ? <Alert variant="destructive">{state.message}</Alert> : null}
+      <SubmitButton variant="destructive" className="w-fit" pendingText="삭제 중…">
+        계정과 모든 데이터 삭제
+      </SubmitButton>
     </form>
   );
 }

@@ -2,16 +2,18 @@ import { LogOut, Settings, Shield } from "lucide-react";
 import Link from "next/link";
 
 import { Button, buttonVariants } from "@/components/ui/button";
+import type { FeatureFlags } from "@/lib/features";
 import { Brand } from "./brand";
 import { BottomTabs, SidebarNav } from "./nav-links";
 
 type AppShellProps = {
   displayName: string | null;
   isAdmin: boolean;
+  flags: FeatureFlags;
   children: React.ReactNode;
 };
 
-export function AppShell({ displayName, isAdmin, children }: AppShellProps) {
+export function AppShell({ displayName, isAdmin, flags, children }: AppShellProps) {
   return (
     <div className="flex min-h-dvh flex-col">
       <a
@@ -56,7 +58,7 @@ export function AppShell({ displayName, isAdmin, children }: AppShellProps) {
       </header>
       <div className="mx-auto flex w-full max-w-6xl flex-1 gap-6 px-4">
         <aside className="hidden w-56 shrink-0 py-6 md:block">
-          <SidebarNav />
+          <SidebarNav flags={flags} />
         </aside>
         <main id="main" tabIndex={-1} className="min-w-0 flex-1 py-6 pb-24 md:pb-10">
           {children}

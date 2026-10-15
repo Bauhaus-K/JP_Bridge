@@ -1,6 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+
+import { deleteAccountData } from "@/lib/account";
 
 import { trackEvent } from "@/lib/analytics";
 import { requireOnboarded } from "@/lib/auth/session";
@@ -8,6 +11,7 @@ import { createClient } from "@/lib/db/server";
 import { sendEmail } from "@/lib/email/send";
 import { planRequestedAdminEmail } from "@/lib/email/templates-plan";
 import { publicEnv, serverEnv } from "@/lib/env";
+import { revokeAllReferrals } from "@/lib/referral/service";
 
 export type SettingsState = { message?: string; ok?: boolean };
 
@@ -73,4 +77,20 @@ export async function cancelPlanRequest(): Promise<void> {
     .eq("user_id", user.id)
     .eq("status", "pending");
   revalidatePath("/settings");
+}
+
+export async function deleteAccount(
+  _prev: SettingsState,
+  formData: FormData,
+): Promise<SettingsState> {
+  const { user, profile } = await requireOnboarded();
+  if (String(formData.get("confirm") ?? "").trim() !== "탈퇴") {
+    return { message: "확인을 위해 '탈퇴'를 입력해 주세요." };
+  }
+  // 진행 중인 제휴사 연결은 먼저 철회한다 (전달된 경우 제휴사에 삭제 요청)
+  await revokeAllReferrals(user.id, `${profile.display_name ?? "후보자"} (${user.email ?? ""})`);
+  await deleteAccountData(user.id);
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+  redirect("/?deleted=1");
 }

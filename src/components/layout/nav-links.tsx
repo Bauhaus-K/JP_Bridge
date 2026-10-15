@@ -4,18 +4,18 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { Badge } from "@/components/ui/badge";
-import { FEATURES } from "@/lib/features";
+import { visibleFeatures, type FeatureFlags } from "@/lib/features";
 import { cn } from "@/lib/utils";
 
 function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function SidebarNav() {
+export function SidebarNav({ flags }: { flags: FeatureFlags }) {
   const pathname = usePathname();
   return (
     <nav aria-label="주요 메뉴" className="grid gap-1">
-      {FEATURES.map((f) => {
+      {visibleFeatures(flags).map((f) => {
         const Icon = f.icon;
         const active = isActive(pathname, f.href);
         if (!f.available) {
@@ -54,7 +54,7 @@ export function SidebarNav() {
 
 export function BottomTabs() {
   const pathname = usePathname();
-  const tabs = FEATURES.filter((f) => f.mobileTab);
+  const tabs = visibleFeatures({ referral: false }).filter((f) => f.mobileTab);
   return (
     <nav
       aria-label="하단 메뉴"

@@ -9,6 +9,8 @@ const NAV = [
   { href: "/admin/reviews", label: "검수 큐" },
   { href: "/admin/users", label: "사용자·플랜" },
   { href: "/admin/metrics", label: "지표" },
+  { href: "/admin/partners", label: "제휴사" },
+  { href: "/admin/referrals", label: "리퍼럴" },
 ];
 
 export default async function AdminLayout({ children }: LayoutProps<"/admin">) {

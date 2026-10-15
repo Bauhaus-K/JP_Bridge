@@ -333,6 +333,59 @@ select test_util.assert(
       and (public.admin_metrics() ->> 'signups_total')::int >= 1),
   'admin_metrics aggregates');
 
+-- 11. 리퍼럴 동의·철회 RPC ----------------------------------------------------------
+insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000000e1', 'e@example.com'),
+                                          ('00000000-0000-0000-0000-0000000000e2', 'e2@example.com');
+insert into public.partners (id, name, country, contact_email, license_no)
+  values ('50000000-0000-0000-0000-0000000000e1', 'Bridge Career KK', 'JP', 'partner@example.jp', '13-ユ-000000');
+select public.record_referral_consent('00000000-0000-0000-0000-0000000000e1', '50000000-0000-0000-0000-0000000000e1',
+  '{profile}', 'referral-v1', 'hash1', '채용 검토', '1년', 'iphash', 'ua');
+select test_util.assert(
+  (select count(*) = 1 from public.consents c join public.referrals r on r.id = c.referral_id
+    where r.user_id = '00000000-0000-0000-0000-0000000000e1' and c.kind = 'grant'
+      and c.partner_snapshot ->> 'license_no' = '13-ユ-000000' and r.status = 'consented'),
+  'referral + grant consent recorded atomically with partner snapshot');
+do $$ begin
+  perform public.record_referral_consent('00000000-0000-0000-0000-0000000000e1', '50000000-0000-0000-0000-0000000000e1',
+    '{profile}', 'referral-v1', 'h', 'p', 'r', null, null);
+  raise exception 'ASSERTION FAILED: duplicate active referral';
+exception when unique_violation then null;
+end $$;
+
+select test_util.login('00000000-0000-0000-0000-0000000000e1');
+do $$ begin
+  perform public.record_referral_consent(auth.uid(), '50000000-0000-0000-0000-0000000000e1', '{profile}', 'v', 'h', 'p', 'r', null, null);
+  raise exception 'ASSERTION FAILED: user called record_referral_consent';
+exception when insufficient_privilege then null;
+end $$;
+select test_util.assert(
+  (select public.report_referral_outcome(
+     (select id from public.referrals where user_id = auth.uid()), 'interviewing', '1차 면접 예정')),
+  'user reports own referral outcome');
+reset role;
+select test_util.login('00000000-0000-0000-0000-0000000000e2');
+select test_util.assert(
+  (select not public.report_referral_outcome(
+     (select id from public.referrals where user_id = '00000000-0000-0000-0000-0000000000e1'), 'hired', null)),
+  'user cannot report outcome for others');
+select test_util.assert((select count(*) = 0 from public.referrals), 'other user cannot read referrals');
+reset role;
+
+select test_util.assert(
+  (select public.record_referral_revocation('00000000-0000-0000-0000-0000000000e1',
+     (select id from public.referrals where user_id = '00000000-0000-0000-0000-0000000000e1'),
+     'referral-revoke-v1', 'h2', null, null) = 'consented'),
+  'revocation returns previous status');
+select test_util.assert(
+  (select status = 'revoked' and revoked_at is not null and outcome = 'interviewing'
+     from public.referrals where user_id = '00000000-0000-0000-0000-0000000000e1'),
+  'referral revoked');
+select test_util.assert(
+  (select count(*) = 2 from public.consents c join public.referrals r on r.id = c.referral_id
+    where r.user_id = '00000000-0000-0000-0000-0000000000e1'),
+  'revoke appended to consent log');
+select test_util.assert((select public.purge_expired_consents() >= 0), 'purge runs for service role');
+
 -- 9. 함수 실행 권한 회귀 방지 --------------------------------------------------
 -- anon 은 어떤 security definer 함수도 실행할 수 없다.
 select test_util.assert(
@@ -348,7 +401,8 @@ select test_util.assert(
    where n.nspname = 'public' and p.prosecdef and p.prorettype <> 'trigger'::regtype
      and has_function_privilege('authenticated', p.oid, 'execute')
      and p.proname not in ('is_admin', 'admin_can_view', 'admin_can_view_es_doc',
-                           'consume_ai_quota', 'my_quota_status', 'request_review')) = '',
+                           'consume_ai_quota', 'my_quota_status', 'request_review',
+                           'report_referral_outcome')) = '',
   'authenticated can execute only allow-listed security definer functions');
 
 \echo 'RLS tests passed'

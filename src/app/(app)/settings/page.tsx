@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { requireOnboarded } from "@/lib/auth/session";
 import { createClient } from "@/lib/db/server";
 import { getQuotaStatus } from "@/lib/es/queries";
+import { flags } from "@/lib/flags";
 import { cancelPlanRequest } from "./actions";
-import { PrivacyForm, ProRequestForm } from "./settings-forms";
+import { DeleteAccountForm, PrivacyForm, ProRequestForm } from "./settings-forms";
 
 export const metadata: Metadata = { title: "설정" };
 
@@ -182,6 +183,35 @@ export default async function SettingsPage() {
         ) : (
           <ProRequestForm />
         )}
+      </section>
+      <section aria-labelledby="data-heading" className="grid gap-4 rounded-xl border bg-card p-4">
+        <h2 id="data-heading" className="font-semibold">
+          내 데이터
+        </h2>
+        <div className="grid gap-2">
+          <p className="text-sm text-muted-foreground">
+            서비스에 저장된 내 데이터 전체를 JSON 파일로 내려받을 수 있습니다.
+          </p>
+          <a
+            href="/api/account/export"
+            download
+            className="w-fit text-sm text-primary underline-offset-4 hover:underline"
+          >
+            내 데이터 내보내기 (JSON)
+          </a>
+        </div>
+        {flags.referral() ? (
+          <Link
+            href="/referrals"
+            className="w-fit text-sm text-primary underline-offset-4 hover:underline"
+          >
+            제휴사 정보 제공 동의 관리
+          </Link>
+        ) : null}
+        <div className="grid gap-2 border-t pt-4">
+          <h3 className="font-medium text-destructive">계정 삭제</h3>
+          <DeleteAccountForm />
+        </div>
       </section>
     </div>
   );

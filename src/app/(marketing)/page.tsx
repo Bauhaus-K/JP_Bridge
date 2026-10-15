@@ -4,7 +4,7 @@ import Link from "next/link";
 import { AiDisclaimer } from "@/components/ai/ai-disclaimer";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { FEATURES } from "@/lib/features";
+import { visibleFeatures } from "@/lib/features";
 
 const PRINCIPLES = [
   "지원자를 평가하거나 합격을 예측하지 않습니다. 오직 본인의 준비를 돕습니다.",
@@ -13,10 +13,16 @@ const PRINCIPLES = [
   "필요할 때 운영자가 직접 검수합니다.",
 ];
 
-export default function LandingPage() {
-  const features = FEATURES.filter((f) => f.key !== "dashboard");
+export default async function LandingPage({ searchParams }: PageProps<"/">) {
+  const { deleted } = await searchParams;
+  const features = visibleFeatures({ referral: false }).filter((f) => f.key !== "dashboard");
   return (
     <div className="mx-auto max-w-5xl px-4">
+      {deleted ? (
+        <p role="status" className="mt-6 rounded-lg border bg-card p-4 text-sm">
+          계정과 데이터가 삭제되었습니다. 그동안 이용해 주셔서 감사합니다.
+        </p>
+      ) : null}
       <section className="py-14 sm:py-20">
         <p className="text-sm font-medium text-primary">新卒・第二新卒・IT 경력 일본 취업</p>
         <h1 className="mt-3 text-3xl font-bold leading-tight tracking-tight sm:text-5xl">

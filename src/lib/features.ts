@@ -1,7 +1,16 @@
 import type { LucideIcon } from "lucide-react";
-import { ClipboardList, FileText, Home, Languages, MessagesSquare, Sparkles } from "lucide-react";
+import {
+  Building2,
+  ClipboardList,
+  FileText,
+  Home,
+  Languages,
+  MessagesSquare,
+  Sparkles,
+} from "lucide-react";
 
-export type FeatureKey = "dashboard" | "es" | "analysis" | "interview" | "career" | "checklist";
+export type FeatureKey =
+  "dashboard" | "es" | "analysis" | "interview" | "career" | "checklist" | "referrals";
 
 export type Feature = {
   key: FeatureKey;
@@ -14,6 +23,8 @@ export type Feature = {
   available: boolean;
   /** 모바일 하단 탭 노출 여부 (최대 5개) */
   mobileTab: boolean;
+  /** 기능 플래그가 켜졌을 때만 노출 */
+  flag?: "referral";
 };
 
 export const FEATURES: Feature[] = [
@@ -77,4 +88,21 @@ export const FEATURES: Feature[] = [
     available: true,
     mobileTab: true,
   },
+  {
+    key: "referrals",
+    href: "/referrals",
+    label: "제휴사 연결",
+    shortLabel: "연결",
+    description: "동의한 정보만 일본 인재소개사에 전달",
+    icon: Building2,
+    available: true,
+    mobileTab: false,
+    flag: "referral",
+  },
 ];
+
+export type FeatureFlags = { referral: boolean };
+
+export function visibleFeatures(flags: FeatureFlags): Feature[] {
+  return FEATURES.filter((f) => !f.flag || flags[f.flag]);
+}

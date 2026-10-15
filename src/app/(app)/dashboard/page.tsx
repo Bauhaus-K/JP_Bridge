@@ -10,7 +10,8 @@ import { requireOnboarded } from "@/lib/auth/session";
 import { getUpcomingItems } from "@/lib/checklist/queries";
 import { dueLabel, dueStatus, todayKst } from "@/lib/checklist/schedule";
 import { formatYearMonthKo, monthsUntil } from "@/lib/dates";
-import { FEATURES } from "@/lib/features";
+import { visibleFeatures } from "@/lib/features";
+import { flags } from "@/lib/flags";
 import { cn } from "@/lib/utils";
 import { JLPT_OPTIONS, PERSONA_OPTIONS } from "@/lib/validation/onboarding";
 
@@ -28,7 +29,9 @@ export default async function DashboardPage() {
   const { profile } = await requireOnboarded();
   const persona = PERSONA_OPTIONS.find((p) => p.value === profile.persona_type)?.label ?? "-";
   const jlpt = JLPT_OPTIONS.find((j) => j.value === profile.jlpt_level)?.label ?? "-";
-  const features = FEATURES.filter((f) => f.key !== "dashboard");
+  const features = visibleFeatures({ referral: flags.referral() }).filter(
+    (f) => f.key !== "dashboard",
+  );
   const upcoming = await getUpcomingItems();
   const today = todayKst();
 

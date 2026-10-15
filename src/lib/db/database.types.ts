@@ -11,6 +11,7 @@ export type EsQuestionType = "self_pr" | "gakuchika" | "shiboudouki" | "free";
 export type ContentSource = "user" | "ai" | "admin";
 export type ReviewTargetType = "es_version" | "career_translation" | "interview_session";
 export type ReviewStatus = "pending" | "in_review" | "done" | "cancelled";
+export type ReferralOutcome = "none" | "interviewing" | "offer" | "hired" | "declined";
 export type AiRunStatus = "success" | "validation_error" | "api_error" | "quota_exceeded";
 
 export type QuotaResult = {
@@ -387,6 +388,92 @@ export type Database = {
         };
         Relationships: [];
       };
+      partners: {
+        Row: {
+          id: string;
+          name: string;
+          country: string;
+          contact_email: string;
+          license_no: string | null;
+          privacy_contact: string | null;
+          description: string | null;
+          active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          name: string;
+          country?: string;
+          contact_email: string;
+          license_no?: string | null;
+          privacy_contact?: string | null;
+          description?: string | null;
+          active?: boolean;
+        };
+        Update: {
+          name?: string;
+          country?: string;
+          contact_email?: string;
+          license_no?: string | null;
+          privacy_contact?: string | null;
+          description?: string | null;
+          active?: boolean;
+        };
+        Relationships: [];
+      };
+      referrals: {
+        Row: {
+          id: string;
+          user_id: string;
+          partner_id: string;
+          shared_items: string[];
+          status: "consented" | "sent" | "revoked" | "closed";
+          outcome: ReferralOutcome;
+          outcome_note: string | null;
+          outcome_reported_by: "user" | "admin" | null;
+          sent_at: string | null;
+          revoked_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: never;
+        Update: {
+          status?: "consented" | "sent" | "revoked" | "closed";
+          outcome?: ReferralOutcome;
+          outcome_note?: string | null;
+          outcome_reported_by?: "user" | "admin" | null;
+          sent_at?: string | null;
+        };
+        Relationships: [];
+      };
+      consents: {
+        Row: {
+          id: string;
+          user_id: string | null;
+          subject_hash: string;
+          referral_id: string | null;
+          kind: "grant" | "revoke";
+          text_version: string;
+          text_hash: string;
+          items: string[];
+          partner_snapshot: Json;
+          purpose: string;
+          retention: string;
+          ip_hash: string | null;
+          user_agent: string | null;
+          created_at: string;
+          retain_until: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      usage_counters: {
+        Row: { user_id: string; bucket: string; window_start: string; count: number };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
       es_documents: {
         Row: {
           id: string;
@@ -552,6 +639,35 @@ export type Database = {
       refund_ai_quota: { Args: { p_user: string; p_kind?: "ai" | "chat" }; Returns: undefined };
       my_quota_status: { Args: Record<string, never>; Returns: QuotaStatus };
       admin_metrics: { Args: Record<string, never>; Returns: AdminMetrics };
+      record_referral_consent: {
+        Args: {
+          p_user_id: string;
+          p_partner_id: string;
+          p_items: string[];
+          p_text_version: string;
+          p_text_hash: string;
+          p_purpose: string;
+          p_retention: string;
+          p_ip_hash: string | null;
+          p_user_agent: string | null;
+        };
+        Returns: string;
+      };
+      record_referral_revocation: {
+        Args: {
+          p_user_id: string;
+          p_referral_id: string;
+          p_text_version: string;
+          p_text_hash: string;
+          p_ip_hash: string | null;
+          p_user_agent: string | null;
+        };
+        Returns: string;
+      };
+      report_referral_outcome: {
+        Args: { p_referral_id: string; p_outcome: ReferralOutcome; p_note?: string | null };
+        Returns: boolean;
+      };
       request_review: {
         Args: { p_target_type: ReviewTargetType; p_target_id: string; p_note?: string | null };
         Returns: RequestReviewResult;
@@ -575,6 +691,8 @@ export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 export type EsDocument = Database["public"]["Tables"]["es_documents"]["Row"];
 export type EsVersion = Database["public"]["Tables"]["es_versions"]["Row"];
 export type ReviewRequest = Database["public"]["Tables"]["review_requests"]["Row"];
+export type Partner = Database["public"]["Tables"]["partners"]["Row"];
+export type Referral = Database["public"]["Tables"]["referrals"]["Row"];
 export type ChecklistItem = Database["public"]["Tables"]["checklist_items"]["Row"];
 export type Episode = Database["public"]["Tables"]["episodes"]["Row"];
 export type InterviewSession = Database["public"]["Tables"]["interview_sessions"]["Row"];
