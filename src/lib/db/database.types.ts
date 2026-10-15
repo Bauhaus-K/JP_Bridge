@@ -199,6 +199,63 @@ export type Database = {
         Update: { title?: string; output?: Json | null };
         Relationships: [];
       };
+      interview_sessions: {
+        Row: {
+          id: string;
+          user_id: string;
+          company: string | null;
+          job_role: string;
+          stage: "first" | "final";
+          question_count: number;
+          input_mode: "text" | "voice";
+          status: "active" | "completed" | "abandoned";
+          summary: Json | null;
+          prompt_version: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string;
+          company?: string | null;
+          job_role: string;
+          stage?: "first" | "final";
+          question_count?: number;
+          input_mode?: "text" | "voice";
+          status?: "active" | "completed" | "abandoned";
+          prompt_version?: string | null;
+        };
+        Update: { status?: "active" | "completed" | "abandoned"; summary?: Json | null };
+        Relationships: [];
+      };
+      interview_turns: {
+        Row: {
+          id: string;
+          session_id: string;
+          user_id: string;
+          idx: number;
+          kind: "question" | "followup";
+          parent_turn_id: string | null;
+          question: string;
+          answer: string | null;
+          audio_path: string | null;
+          feedback: Json | null;
+          meta: Json | null;
+          created_at: string;
+          answered_at: string | null;
+        };
+        Insert: {
+          session_id: string;
+          user_id?: string;
+          idx: number;
+          kind?: "question" | "followup";
+          parent_turn_id?: string | null;
+          question: string;
+          meta?: Json | null;
+        };
+        Update: { answer?: string | null; feedback?: Json | null; answered_at?: string | null };
+        Relationships: [];
+      };
       es_documents: {
         Row: {
           id: string;
@@ -387,4 +444,6 @@ export type EsDocument = Database["public"]["Tables"]["es_documents"]["Row"];
 export type EsVersion = Database["public"]["Tables"]["es_versions"]["Row"];
 export type ReviewRequest = Database["public"]["Tables"]["review_requests"]["Row"];
 export type Episode = Database["public"]["Tables"]["episodes"]["Row"];
+export type InterviewSession = Database["public"]["Tables"]["interview_sessions"]["Row"];
+export type InterviewTurn = Database["public"]["Tables"]["interview_turns"]["Row"];
 export type CareerTranslationRow = Database["public"]["Tables"]["career_translations"]["Row"];

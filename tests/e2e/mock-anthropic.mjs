@@ -87,6 +87,64 @@ function careerTranslation(userText) {
   };
 }
 
+function interviewQuestions(userText) {
+  const n = Number(/質問を (\d+) 個/.exec(userText)?.[1] ?? 3);
+  const pool = [
+    "まず、簡単に自己紹介をお願いします。",
+    "学生時代に最も力を入れたことを教えてください。",
+    "なぜ日本で働きたいと考えたのですか。",
+    "当社を志望する理由を教えてください。",
+    "入社後に挑戦したいことは何ですか。",
+    "あなたの強みを一つ挙げてください。",
+    "チームで意見が対立したとき、どう対応しましたか。",
+    "最後に何か質問はありますか。",
+  ];
+  return {
+    questions: pool.slice(0, n).map((q) => ({
+      question_ja: q,
+      intent_ko: "지원자의 경험과 사고방식을 확인하려는 질문입니다.",
+      tip_ko: "결론을 먼저 말하고 구체적인 행동을 덧붙이세요.",
+    })),
+  };
+}
+
+function interviewFeedback(userText) {
+  const isFollowup = userText.includes("深掘り質問への回答です");
+  return {
+    content_ko: "질문에 정면으로 답했고 경험이 구체적입니다.",
+    keigo_ko: "「御社」를 사용해 자연스럽습니다. 「思います」가 반복됩니다.",
+    logic_ko: "결론→이유→예시 순서가 잘 지켜졌습니다.",
+    good_points_ko: ["결론을 먼저 말했습니다."],
+    keigo_fixes: [
+      {
+        before_ja: "頑張りたいと思います",
+        after_ja: "貢献したいと考えております",
+        note_ko: "의지를 더 분명하게 전달합니다.",
+      },
+    ],
+    improved_answer_ja: "私の強みは粘り強さです。テニスサークルで新入部員の定着に取り組みました。",
+    followup_question_ja: isFollowup ? null : "その経験で一番苦労したことは何ですか。",
+  };
+}
+
+function interviewSummary() {
+  return {
+    overall_ko:
+      "전반적으로 결론을 먼저 말하는 구조가 좋았습니다. 표현을 조금 더 다양하게 해 보세요.",
+    strengths_ko: ["경험을 구체적으로 설명함"],
+    improvements_ko: ["「思います」의 반복 줄이기"],
+    keigo_patterns: [
+      {
+        wrong_ja: "頑張りたいと思います",
+        right_ja: "貢献したいと考えております",
+        note_ko: "의지 표현",
+      },
+    ],
+    practice_tips_ko: ["답변을 녹음해 1분 안에 말하는 연습"],
+    next_questions_ja: ["あなたの弱みは何ですか。"],
+  };
+}
+
 const CHAT_REPLY =
   "좋은 경험이네요. 그때 직접 어떤 방법을 시도하셨는지 조금 더 자세히 들려주실 수 있을까요?";
 
@@ -164,6 +222,10 @@ const server = http.createServer(async (req, res) => {
   const props = body.output_config?.format?.schema?.properties ?? null;
   if (!props) return sse(res, body.model, CHAT_REPLY);
   if (props.episodes) return sse(res, body.model, JSON.stringify(episodeExtraction(userText)));
+  if (props.questions) return sse(res, body.model, JSON.stringify(interviewQuestions(userText)));
+  if (props.improved_answer_ja)
+    return sse(res, body.model, JSON.stringify(interviewFeedback(userText)));
+  if (props.next_questions_ja) return sse(res, body.model, JSON.stringify(interviewSummary()));
   if (props.shokumu_youyaku_ja)
     return sse(res, body.model, JSON.stringify(careerTranslation(userText)));
   return sse(res, body.model, JSON.stringify(esReview(userText)));

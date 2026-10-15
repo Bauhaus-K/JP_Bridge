@@ -54,7 +54,7 @@ export const FEATURES: Feature[] = [
     shortLabel: "면접",
     description: "일본식 면접 질문과 경어·논리 피드백",
     icon: MessagesSquare,
-    available: false,
+    available: true,
     mobileTab: true,
   },
   {

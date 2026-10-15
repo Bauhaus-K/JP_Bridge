@@ -66,3 +66,15 @@ PRD의 모호한 부분을 기본값으로 정한 내역입니다. 되돌리기 
 | D39 | ES 에피소드 참고 | ES 문서별 최대 5개 카드를 연결(`es_document_episodes`), 첨삭 프롬프트에 "본인이 등록한 사실"로만 전달 |
 | D40 | 경력 번역 저장 | 변환 결과를 `career_translations.output` 에 그대로 저장, 사용자 편집본은 `output.edited_text_ja` 로 추가 저장(원본 구조 보존). 한국 직급은 일본 직급으로 단순 치환하지 않고 "代理（主任〜係長相当）"처럼 보충 + `term_notes` |
 | D41 | 경량 로컬 스택 | Supabase CLI 이미지 일부를 받을 수 없는 환경을 위해 `scripts/lite-stack.sh` + `scripts/lite-gateway.mjs` 제공 (Postgres·GoTrue·PostgREST·Mailpit) |
+
+## MS4 결정
+
+| ID | 결정 | 내용 |
+|---|---|---|
+| D42 | 면접 모델·한도 | 질문 생성은 FAST 모델(effort low), 답변 피드백은 메인 모델(effort low) — 둘 다 chat 한도. 종료 리포트는 메인 모델(effort medium), ai 한도 |
+| D43 | 꼬리질문 | 본질문 답변 피드백이 꼬리질문을 제안하면 1회만 추가(같은 idx, kind=followup). 꼬리질문 답변에는 꼬리질문을 만들지 않음(서버에서 강제 null) |
+| D44 | 점수 없음 | 면접에는 숫자 점수·합격 판정이 없다. 피드백은 내용·경어·논리 서술 + 표현 수정 + 개선 예시 답변 |
+| D45 | 공정 채용 | 국적·가족·종교·출신지 등 적성과 무관한 질문을 만들지 않도록 프롬프트에 명시 |
+| D46 | 질문 메타 | 질문의 의도·답변 팁은 `interview_turns.meta` 에 저장, 사용자가 원할 때 펼쳐 봄 |
+| D47 | 중간 종료 | 한 문항 이상 답하면 언제든 종료하고 리포트를 받을 수 있음 |
+| D48 | 음성 확장 | `AnswerInput` 컴포넌트의 `mode`(text/voice)와 `interview_sessions.input_mode`, `interview_turns.audio_path` 로 확장 지점만 마련 |
