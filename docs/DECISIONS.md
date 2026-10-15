@@ -33,6 +33,24 @@ PRD의 모호한 부분을 기본값으로 정한 내역입니다. 되돌리기 
 | D16 | 프로필 필드 | PRD 의 `grad_or_career` 를 `graduation_date`(新卒) / `career_years`(第二新卒·IT 경력)로 분리. `ai_notice_ack_at`·`onboarded_at` 추가 |
 | D17 | 관리자 데이터 접근 | admin 은 프로필·운영 테이블은 읽되, ES·경력 번역·면접은 **검수 요청이 걸린 대상만** 읽기 (`admin_can_view*` 함수). 자기분석 대화는 접근 불가 |
 | D18 | ES 버전 불변 | `es_versions` 는 UPDATE/DELETE 정책 없음(히스토리 보존). 사용자는 `user`/`ai` 출처만, admin 은 검수 대상 문서에 `admin` 출처만 추가 |
-| D19 | 무료/유료 기본 한도 | free: AI 10회/일·3회/분·검수 0회/월, pro: 100회/일·10회/분·검수 4회/월, 19,900원 (시드값, 운영 중 조정) |
+| D19 | 무료/유료 기본 한도 | free: AI 10회/일·3회/분·검수 **1회/월**(MS2에서 0→1, 컨시어지 체험), pro: 100회/일·10회/분·검수 4회/월, 19,900원. 일·월 경계는 한국 시간 기준 |
 | D20 | 접근 차단 응답 | 비관리자의 `/admin` 접근은 403 대신 404 로 존재 자체를 숨김 |
 | D21 | RLS 테스트 | pgTAP 대신 순수 SQL 단언(`supabase/tests/rls_test.sql`). 순수 Postgres + auth 셈 또는 실제 Supabase DB(트랜잭션 롤백) 양쪽에서 실행 가능 |
+
+## MS2 결정
+
+| ID | 결정 | 내용 |
+|---|---|---|
+| D22 | 구조화 출력 방식 | Sonnet 5.5 는 강제 `tool_choice`(any/tool)를 400 으로 거부하므로 tool use 대신 **structured outputs**(`output_config.format` JSON schema)를 사용. 스키마는 zod 에서 생성(SDK 가 미지원 제약 제거)하고 응답은 우리가 zod 로 다시 검증 |
+| D23 | SDK 자동 파싱 미사용 | `betaZodOutputFormat()` 의 `parse` 를 넘기면 `finalMessage()` 가 스키마 불일치에서 자체 예외를 던져 재시도가 불가능해진다(E2E 로 발견). JSON schema 만 넘기고 파싱·검증·재시도는 직접 처리 |
+| D24 | 재시도 정책 | 스키마 불일치·JSON 오류·`max_tokens` 잘림·추가 검증(글자 수 초과) 실패 시 직전 출력과 문제점을 대화로 이어 붙여 1회 재시도. refusal 은 재시도하지 않음. 네트워크/5xx 재시도는 SDK 기본(2회) |
+| D25 | 사용량 환불 | AI 결과를 주지 못한 모든 실패(서버 혼잡, 형식 실패, refusal 등)는 일일 사용량 1회 환불(service_role 전용 RPC). 한도 초과는 모델 호출 없이 거절 |
+| D26 | 거절 폴백 | `claude-sonnet-5-5`/`opus-5-5` 등 지원 모델에는 서버측 refusal 폴백(`fallbacks: "default"`, beta `server-side-fallback-2026-07-01`)을 기본 활성화. 지원하지 않는 모델(Haiku 등)에는 보내지 않음 |
+| D27 | ES 첨삭 결과 저장 | 첨삭 결과는 `source='ai'` 새 버전(내용=수정본, `ai_feedback`=코멘트·변경 이유·질문, `scores`=원본 점수, parent=첨삭한 버전)으로 **서버만** 기록. 사용자는 `user` 출처만 직접 추가 가능(위조 방지). 버전 번호는 트리거가 직렬화해 부여 |
+| D28 | 저장 중복 방지 | 편집 내용이 기준 버전과 같으면 새 버전을 만들지 않고 기존 버전을 재사용 |
+| D29 | 진행 표시 | 첨삭 응답은 NDJSON 스트림(saved → progress(생성 글자 수) → result/error). 부분 JSON 렌더링은 하지 않음 |
+| D30 | 첨삭 전후 만족도 | 첨삭 전(선택, 초안 만족도 `phase=before`)과 첨삭 후(`phase=after`, 결과 평가)를 `feedback_ratings` 에 기록 |
+| D31 | effort | ES 첨삭은 `effort: medium`(Sonnet 5.5). 품질 평가 후 조정 |
+| D32 | 함수 권한 | Supabase 는 public 함수에 anon/authenticated 실행 권한을 기본 부여하므로 `revoke ... from public` 만으로는 부족. 역할을 명시해 회수하고, RLS 테스트에 security definer 함수 실행 권한 허용 목록 검사를 추가 |
+| D33 | AI 목 | E2E 는 Anthropic Messages API SSE 를 흉내 내는 목 서버(`tests/e2e/mock-anthropic.mjs`)에 `ANTHROPIC_BASE_URL` 로 연결. 앱 코드에는 목 분기가 없음 |
+| D34 | 검수 요청 | `request_review` RPC 로만 생성(소유권·중복·월 한도 원자적 검사). 이메일 알림·처리 화면은 MS5 |

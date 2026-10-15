@@ -19,10 +19,22 @@ export default defineConfig({
     { name: "mobile", use: { ...devices["Pixel 7"] } },
     { name: "desktop", use: { ...devices["Desktop Chrome"] } },
   ],
-  webServer: {
-    command: `npm run build && npm run start -- -p ${port}`,
-    port,
-    timeout: 240_000,
-    reuseExistingServer: !process.env.CI,
-  },
+  webServer: [
+    {
+      // Anthropic API 목 서버 — 앱은 ANTHROPIC_BASE_URL 로 이 서버를 호출한다
+      command: "node tests/e2e/mock-anthropic.mjs",
+      port: 4010,
+      reuseExistingServer: !process.env.CI,
+    },
+    {
+      command: `npm run build && npm run start -- -p ${port}`,
+      port,
+      timeout: 240_000,
+      reuseExistingServer: !process.env.CI,
+      env: {
+        ANTHROPIC_BASE_URL: "http://127.0.0.1:4010",
+        ANTHROPIC_API_KEY: "e2e-mock-key",
+      },
+    },
+  ],
 });

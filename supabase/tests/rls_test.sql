@@ -29,7 +29,7 @@ insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000ad', 'admin@example.com');
 update public.profiles set role = 'admin' where user_id = '00000000-0000-0000-0000-0000000000ad';
 
-select test_util.assert((select count(*) = 3 from public.profiles), 'profiles auto-created for new users');
+select test_util.assert((select count(*) = 3 from public.profiles where user_id in ('00000000-0000-0000-0000-00000000000a','00000000-0000-0000-0000-00000000000b','00000000-0000-0000-0000-0000000000ad')), 'profiles auto-created for new users');
 
 -- 1. 프로필 ----------------------------------------------------------------
 select test_util.login('00000000-0000-0000-0000-00000000000a');
@@ -66,6 +66,12 @@ do $$ begin
   raise exception 'ASSERTION FAILED: user inserted admin-sourced version';
 exception when insufficient_privilege then null;
 end $$;
+do $$ begin
+  insert into public.es_versions (doc_id, content, source, ai_feedback)
+    values ('10000000-0000-0000-0000-000000000001', 'forged', 'ai', '{}');
+  raise exception 'ASSERTION FAILED: user inserted ai-sourced version';
+exception when insufficient_privilege then null;
+end $$;
 
 update public.es_versions set content = 'tampered' where id = '20000000-0000-0000-0000-000000000001';
 delete from public.es_versions where id = '20000000-0000-0000-0000-000000000001';
@@ -100,8 +106,8 @@ reset role;
 
 -- 4. admin 접근 범위 --------------------------------------------------------
 select test_util.login('00000000-0000-0000-0000-0000000000ad');
-select test_util.assert((select count(*) = 0 from public.es_documents), 'admin cannot read ES without review request');
-select test_util.assert((select count(*) = 3 from public.profiles), 'admin reads profiles');
+select test_util.assert((select count(*) = 0 from public.es_documents where id = '10000000-0000-0000-0000-000000000001'), 'admin cannot read ES without review request');
+select test_util.assert((select count(*) = 3 from public.profiles where user_id in ('00000000-0000-0000-0000-00000000000a','00000000-0000-0000-0000-00000000000b','00000000-0000-0000-0000-0000000000ad')), 'admin reads profiles');
 reset role;
 
 select test_util.login('00000000-0000-0000-0000-00000000000a');
@@ -111,13 +117,19 @@ do $$ begin
   raise exception 'ASSERTION FAILED: user created non-pending review request';
 exception when insufficient_privilege then null;
 end $$;
-insert into public.review_requests (id, target_type, target_id)
-  values ('40000000-0000-0000-0000-000000000001', 'es_version', '20000000-0000-0000-0000-000000000001');
+select test_util.assert(
+  (select (public.request_review('es_version', '20000000-0000-0000-0000-000000000001', '확인 부탁드립니다') ->> 'ok')::boolean),
+  'user requests review via RPC');
+select test_util.assert(
+  (select public.request_review('es_version', '20000000-0000-0000-0000-000000000001') ->> 'reason' = 'duplicate'),
+  'duplicate open review request rejected');
 reset role;
+update public.review_requests set id = '40000000-0000-0000-0000-000000000001'
+  where target_id = '20000000-0000-0000-0000-000000000001';
 
 select test_util.login('00000000-0000-0000-0000-0000000000ad');
-select test_util.assert((select count(*) = 1 from public.es_documents), 'admin reads ES doc under review');
-select test_util.assert((select count(*) = 1 from public.es_versions), 'admin reads versions under review');
+select test_util.assert((select count(*) = 1 from public.es_documents where id = '10000000-0000-0000-0000-000000000001'), 'admin reads ES doc under review');
+select test_util.assert((select count(*) = 1 from public.es_versions where doc_id = '10000000-0000-0000-0000-000000000001'), 'admin reads versions under review');
 insert into public.es_versions (doc_id, version_no, content, source)
   values ('10000000-0000-0000-0000-000000000001', 2, '運営者による修正版', 'admin');
 update public.review_requests set status = 'done', admin_comment = 'good' where id = '40000000-0000-0000-0000-000000000001';
@@ -137,7 +149,7 @@ reset role;
 insert into public.ai_runs (user_id, feature, model, prompt_version, status, raw)
   values ('00000000-0000-0000-0000-00000000000a', 'es_review', 'm', 'v1', 'success', '{"x":1}');
 select test_util.login('00000000-0000-0000-0000-0000000000ad');
-select test_util.assert((select count(*) = 1 from (select id, feature from public.ai_runs) s), 'admin reads ai_runs metadata');
+select test_util.assert((select count(*) >= 1 from (select id, feature from public.ai_runs where user_id = '00000000-0000-0000-0000-00000000000a') s), 'admin reads ai_runs metadata');
 do $$ begin
   perform raw from public.ai_runs;
   raise exception 'ASSERTION FAILED: admin read ai_runs.raw';
@@ -199,10 +211,101 @@ reset role;
 
 delete from auth.users where id = '00000000-0000-0000-0000-00000000000a';
 select test_util.assert(
-  (select count(*) = 1 and bool_and(user_id is null and referral_id is null
-     and subject_hash = encode(extensions.digest('00000000-0000-0000-0000-00000000000a', 'sha256'), 'hex'))
-   from public.consents),
+  (select count(*) = 1 and bool_and(user_id is null and referral_id is null)
+   from public.consents
+   where subject_hash = encode(extensions.digest('00000000-0000-0000-0000-00000000000a', 'sha256'), 'hex')),
   'consent kept pseudonymized after account deletion');
-select test_util.assert((select count(*) = 0 from public.es_documents), 'user content cascaded on deletion');
+select test_util.assert((select count(*) = 0 from public.es_documents where id = '10000000-0000-0000-0000-000000000001'), 'user content cascaded on deletion');
+
+
+-- 8. AI 한도 / 환불 / 버전 번호 / 검수 한도 ------------------------------------
+insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000000c1', 'c@example.com');
+select test_util.login('00000000-0000-0000-0000-0000000000c1');
+-- free: 분당 3회
+select test_util.assert((select (public.consume_ai_quota() ->> 'allowed')::boolean), 'quota call 1');
+select test_util.assert((select (public.consume_ai_quota() ->> 'allowed')::boolean), 'quota call 2');
+select test_util.assert((select (public.consume_ai_quota() ->> 'day_used')::int = 3), 'quota call 3 counts');
+select test_util.assert((select public.consume_ai_quota() ->> 'reason' = 'minute'), 'per-minute limit enforced');
+select test_util.assert((select (public.my_quota_status() ->> 'day_used')::int = 3), 'status shows day usage');
+do $$ begin
+  perform public.refund_ai_quota(auth.uid());
+  raise exception 'ASSERTION FAILED: user called refund';
+exception when insufficient_privilege then null;
+end $$;
+reset role;
+
+-- 일일 한도: 분 창을 과거로 돌려 분당 제한을 피한 뒤 10회째까지 소비
+update public.usage_counters set window_start = window_start - interval '2 minutes'
+  where user_id = '00000000-0000-0000-0000-0000000000c1' and bucket = 'ai_minute';
+update public.usage_counters set count = 10
+  where user_id = '00000000-0000-0000-0000-0000000000c1' and bucket = 'ai_day';
+select test_util.login('00000000-0000-0000-0000-0000000000c1');
+select test_util.assert((select public.consume_ai_quota() ->> 'reason' = 'day'), 'daily limit enforced');
+reset role;
+select public.refund_ai_quota('00000000-0000-0000-0000-0000000000c1');
+select test_util.assert(
+  (select count = 9 from public.usage_counters
+    where user_id = '00000000-0000-0000-0000-0000000000c1' and bucket = 'ai_day'),
+  'service refund decrements day usage');
+
+-- 유료 플랜이면 한도가 커진다
+insert into public.subscriptions (user_id, plan_code) values ('00000000-0000-0000-0000-0000000000c1', 'pro');
+select test_util.login('00000000-0000-0000-0000-0000000000c1');
+select test_util.assert((select public.my_quota_status() ->> 'plan' = 'pro'), 'pro plan detected');
+select test_util.assert((select (public.consume_ai_quota() ->> 'allowed')::boolean), 'pro user under limit');
+
+-- 버전 번호 자동 부여 + 부모 검증
+insert into public.es_documents (id, question_type, title) values ('10000000-0000-0000-0000-0000000000c1', 'gakuchika', 'ガクチカ');
+insert into public.es_versions (id, doc_id, content) values ('20000000-0000-0000-0000-0000000000c1', '10000000-0000-0000-0000-0000000000c1', 'v1');
+insert into public.es_versions (doc_id, content, parent_version_id) values ('10000000-0000-0000-0000-0000000000c1', 'v2', '20000000-0000-0000-0000-0000000000c1');
+select test_util.assert(
+  (select array_agg(version_no order by version_no) = '{1,2}' from public.es_versions where doc_id = '10000000-0000-0000-0000-0000000000c1'),
+  'version numbers auto-assigned');
+do $$ begin
+  insert into public.es_versions (doc_id, content, parent_version_id)
+    values ('10000000-0000-0000-0000-0000000000c1', 'x', '20000000-0000-0000-0000-000000000001');
+  raise exception 'ASSERTION FAILED: foreign parent accepted';
+exception when check_violation then null;
+end $$;
+
+-- 검수: 남의 대상 불가, pro 월 4회
+select test_util.assert(
+  (select public.request_review('es_version', '20000000-0000-0000-0000-000000000001') ->> 'reason' = 'not_found'),
+  'cannot request review of foreign content');
+do $$ begin
+  insert into public.review_requests (target_type, target_id) values ('es_version', '20000000-0000-0000-0000-0000000000c1');
+  raise exception 'ASSERTION FAILED: direct review insert allowed';
+exception when insufficient_privilege then null;
+end $$;
+reset role;
+-- 월 사용량을 한도까지 채운 뒤 거절 확인
+update public.usage_counters set count = 4 where user_id = '00000000-0000-0000-0000-0000000000c1' and bucket = 'review_month';
+insert into public.usage_counters (user_id, bucket, window_start, count)
+  select '00000000-0000-0000-0000-0000000000c1', 'review_month', public.quota_month_start(), 4
+  where not exists (select 1 from public.usage_counters where user_id = '00000000-0000-0000-0000-0000000000c1' and bucket = 'review_month');
+select test_util.login('00000000-0000-0000-0000-0000000000c1');
+select test_util.assert(
+  (select public.request_review('es_version', '20000000-0000-0000-0000-0000000000c1') ->> 'reason' = 'limit'),
+  'monthly review limit enforced');
+reset role;
+
+
+-- 9. 함수 실행 권한 회귀 방지 --------------------------------------------------
+-- anon 은 어떤 security definer 함수도 실행할 수 없다.
+select test_util.assert(
+  (select coalesce(string_agg(p.proname, ','), '') = '' from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+   where n.nspname = 'public' and p.prosecdef and p.prorettype <> 'trigger'::regtype
+     and has_function_privilege('anon', p.oid, 'execute')),
+  'anon cannot execute security definer functions');
+-- authenticated 가 실행 가능한 security definer 함수는 허용 목록만.
+select test_util.assert(
+  (select coalesce(string_agg(p.proname, ',' order by p.proname), '') from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+   where n.nspname = 'public' and p.prosecdef and p.prorettype <> 'trigger'::regtype
+     and has_function_privilege('authenticated', p.oid, 'execute')
+     and p.proname not in ('is_admin', 'admin_can_view', 'admin_can_view_es_doc',
+                           'consume_ai_quota', 'my_quota_status', 'request_review')) = '',
+  'authenticated can execute only allow-listed security definer functions');
 
 \echo 'RLS tests passed'

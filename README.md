@@ -8,7 +8,7 @@ ES 첨삭, 일본식 모의면접, 자기분석, 職務経歴書 번역, 일정�
 
 ## 기술 스택
 
-Next.js 16 (App Router, `src/proxy.ts`) · TypeScript · Tailwind CSS 4 · shadcn/ui 호환 컴포넌트 · Supabase (Postgres, Auth, RLS) · Anthropic SDK (MS2~) · zod · Vitest · Playwright
+Next.js 16 (App Router, `src/proxy.ts`) · TypeScript · Tailwind CSS 4 · shadcn/ui 호환 컴포넌트 · Supabase (Postgres, Auth, RLS) · Anthropic SDK · zod · Vitest · Playwright
 
 ## 로컬 실행
 
@@ -57,12 +57,14 @@ npm run test:db     # 마이그레이션 + RLS 회귀 테스트
                     #  - 로컬 Postgres 바이너리로 임시 클러스터 생성, 또는
                     #  - TEST_DATABASE_URL=<빈 Postgres> 지정
 npm run test:e2e    # Playwright. Supabase 로컬 스택 + Mailpit 필요
+                    #  Anthropic API 목 서버(tests/e2e/mock-anthropic.mjs, :4010)를 함께 띄우고
+                    #  앱을 ANTHROPIC_BASE_URL=http://127.0.0.1:4010 으로 실행한다 (실제 API 호출 없음)
                     #  E2E_PORT(기본 3100)에서 앱을 빌드·실행. NEXT_PUBLIC_SITE_URL 포트와 맞출 것
                     #  E2E_ADMIN_EMAIL=<ADMIN_EMAILS 중 하나> 로 관리자 시나리오 실행
                     #  PLAYWRIGHT_CHROMIUM_PATH 로 사전 설치 Chromium 지정 가능
 ```
 
-AI 호출은 테스트에서 항상 mock 처리합니다(MS2~).
+AI 호출은 테스트에서 항상 mock 처리합니다: 유닛은 가짜 클라이언트 주입, E2E 는 SSE 목 서버.
 
 ## 배포 (Vercel)
 
@@ -76,7 +78,7 @@ AI 호출은 테스트에서 항상 mock 처리합니다(MS2~).
 ```
 src/app            라우트 ((marketing), (auth), (setup), (app), admin, auth/*)
 src/components     ui/, layout/, ai/
-src/lib            env, flags, auth/, db/, validation/, content/ (ai/, payments/ 는 이후 마일스톤)
+src/lib            env, flags, ai/(client·runner·prompts·schemas), es/, text/, pii/, auth/, db/, validation/, content/ (payments/ 는 MS6)
 src/content        legal/*.md, (checklists/*.json — MS5)
 supabase           config.toml, migrations/, tests/
 tests              unit/ (Vitest), e2e/ (Playwright)

@@ -34,7 +34,7 @@ export const FEATURES: Feature[] = [
     shortLabel: "ES",
     description: "自己PR・ガクチカ・志望動機 작성과 AI 첨삭",
     icon: FileText,
-    available: false,
+    available: true,
     mobileTab: true,
   },
   {
