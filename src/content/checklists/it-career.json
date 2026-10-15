@@ -1,0 +1,131 @@
+{
+  "id": "it-career",
+  "version": "2026-10",
+  "last_reviewed": "2026-10-18",
+  "title": "IT 경력직 일본 취업 체크리스트",
+  "personas": ["it_career"],
+  "note": "IT 경력 채용은 통년 채용이며 기술 면접·코딩 테스트 비중이 큽니다. 목표 입사 시기에서 역산한 권장 일정입니다.",
+  "items": [
+    {
+      "id": "career-inventory",
+      "category": "schedule",
+      "offset_months": -7,
+      "title": "기술 스택·프로젝트 경력 정리",
+      "description": "사용 기술, 역할, 규모, 성과를 프로젝트 단위로 정리합니다."
+    },
+    {
+      "id": "portfolio",
+      "category": "schedule",
+      "offset_months": -6,
+      "title": "포트폴리오·GitHub 정리",
+      "description": "대표 프로젝트의 README를 일본어 또는 영어로 정리합니다."
+    },
+    {
+      "id": "apply",
+      "category": "schedule",
+      "offset_months": -5,
+      "title": "지원 시작 (채용 사이트·리크루터)",
+      "description": "일본어 수준에 따라 영어로 업무 가능한 기업도 함께 검토합니다."
+    },
+    {
+      "id": "coding-test",
+      "category": "schedule",
+      "offset_months": -5,
+      "title": "코딩 테스트·기술 면접 준비",
+      "description": "알고리즘 테스트, 과제형 테스트, 시스템 설계 면접 유형을 확인합니다."
+    },
+    {
+      "id": "interview",
+      "category": "schedule",
+      "offset_months": -4,
+      "title": "면접 (기술 → 현업 → 임원)",
+      "description": "기술 설명을 일본어로 하는 연습을 모의면접으로 해 두세요."
+    },
+    {
+      "id": "offer",
+      "category": "schedule",
+      "offset_months": -3,
+      "title": "오퍼·근로조건 확인",
+      "description": "연봉(年収) 구성, 재택근무, 비자 지원, 입사일을 서면으로 확인합니다."
+    },
+    {
+      "id": "resign",
+      "category": "schedule",
+      "offset_months": -2,
+      "title": "현 직장 퇴직·인수인계",
+      "description": "퇴직 통보 기한과 경력증명서 발급을 확인합니다."
+    },
+
+    {
+      "id": "shokumukeirekisho",
+      "category": "documents",
+      "offset_months": -7,
+      "title": "職務経歴書 (스킬 시트 포함)",
+      "description": "IT 직무는 프로젝트별 스킬 시트 형식을 요구하는 경우가 많습니다."
+    },
+    {
+      "id": "rirekisho",
+      "category": "documents",
+      "offset_months": -6,
+      "title": "일본식 이력서·증명사진",
+      "description": "이력서 양식과 사진 규격을 확인합니다."
+    },
+    {
+      "id": "employment-cert",
+      "category": "documents",
+      "offset_months": -2,
+      "title": "경력(재직)증명서 발급",
+      "description": "비자 심사에서 실무 경력 확인에 쓰일 수 있습니다."
+    },
+    {
+      "id": "diploma",
+      "category": "documents",
+      "offset_months": -4,
+      "title": "졸업·학위 증명서 (영문)",
+      "description": "학력 요건 확인용입니다."
+    },
+    {
+      "id": "it-cert",
+      "category": "documents",
+      "offset_months": -4,
+      "title": "IT 자격증 증명 (해당 시)",
+      "description": "일본이 인정하는 IT 자격(정보처리 관련 상호인정 시험 등)이 있으면 비자 요건에 참고될 수 있습니다."
+    },
+
+    {
+      "id": "visa-fit",
+      "category": "visa",
+      "offset_months": -6,
+      "title": "학력·경력과 직무의 관련성 확인",
+      "description": "취업비자(技術・人文知識・国際業務)는 일반적으로 IT 관련 학위 또는 일정 기간 이상의 실무 경력과 업무의 관련성을 봅니다."
+    },
+    {
+      "id": "coe-start",
+      "category": "visa",
+      "offset_months": -3,
+      "title": "회사와 비자 절차 확인 (在留資格認定証明書)",
+      "description": "COE는 보통 회사(또는 대리인)가 신청합니다."
+    },
+    {
+      "id": "coe-wait",
+      "category": "visa",
+      "offset_months": -2,
+      "title": "COE 발급 대기",
+      "description": "심사에는 보통 1~3개월이 걸립니다."
+    },
+    {
+      "id": "visa-apply",
+      "category": "visa",
+      "offset_months": -1,
+      "title": "주한 일본 공관에 사증 신청",
+      "description": "COE 수령 후 사증을 신청하고, 정해진 기간 안에 입국합니다."
+    },
+    {
+      "id": "residence-card",
+      "category": "visa",
+      "offset_months": 0,
+      "title": "입국 후 재류카드 수령·주소 신고",
+      "description": "거주지가 정해지면 정해진 기간 안에 전입 신고를 합니다."
+    }
+  ]
+}

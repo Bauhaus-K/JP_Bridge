@@ -256,6 +256,74 @@ export type Database = {
         Update: { answer?: string | null; feedback?: Json | null; answered_at?: string | null };
         Relationships: [];
       };
+      checklists: {
+        Row: {
+          id: string;
+          user_id: string;
+          template_id: string;
+          template_version: string;
+          target_start: string;
+          created_at: string;
+        };
+        Insert: {
+          user_id?: string;
+          template_id: string;
+          template_version: string;
+          target_start: string;
+        };
+        Update: never;
+        Relationships: [];
+      };
+      checklist_items: {
+        Row: {
+          id: string;
+          checklist_id: string;
+          user_id: string;
+          template_item_id: string;
+          category: "schedule" | "documents" | "visa";
+          title: string;
+          description: string | null;
+          due_date: string | null;
+          sort_order: number;
+          done_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          checklist_id: string;
+          user_id?: string;
+          template_item_id: string;
+          category: "schedule" | "documents" | "visa";
+          title: string;
+          description?: string | null;
+          due_date?: string | null;
+          sort_order?: number;
+          done_at?: string | null;
+        };
+        Update: { done_at?: string | null };
+        Relationships: [];
+      };
+      email_log: {
+        Row: {
+          id: string;
+          user_id: string | null;
+          kind: string;
+          to_domain: string | null;
+          provider: string;
+          status: string;
+          error: string | null;
+          created_at: string;
+        };
+        Insert: {
+          user_id?: string | null;
+          kind: string;
+          to_domain?: string | null;
+          provider: string;
+          status: string;
+          error?: string | null;
+        };
+        Update: never;
+        Relationships: [];
+      };
       es_documents: {
         Row: {
           id: string;
@@ -443,6 +511,7 @@ export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 export type EsDocument = Database["public"]["Tables"]["es_documents"]["Row"];
 export type EsVersion = Database["public"]["Tables"]["es_versions"]["Row"];
 export type ReviewRequest = Database["public"]["Tables"]["review_requests"]["Row"];
+export type ChecklistItem = Database["public"]["Tables"]["checklist_items"]["Row"];
 export type Episode = Database["public"]["Tables"]["episodes"]["Row"];
 export type InterviewSession = Database["public"]["Tables"]["interview_sessions"]["Row"];
 export type InterviewTurn = Database["public"]["Tables"]["interview_turns"]["Row"];

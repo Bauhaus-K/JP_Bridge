@@ -78,3 +78,15 @@ PRD의 모호한 부분을 기본값으로 정한 내역입니다. 되돌리기 
 | D46 | 질문 메타 | 질문의 의도·답변 팁은 `interview_turns.meta` 에 저장, 사용자가 원할 때 펼쳐 봄 |
 | D47 | 중간 종료 | 한 문항 이상 답하면 언제든 종료하고 리포트를 받을 수 있음 |
 | D48 | 음성 확장 | `AnswerInput` 컴포넌트의 `mode`(text/voice)와 `interview_sessions.input_mode`, `interview_turns.audio_path` 로 확장 지점만 마련 |
+
+## MS5 결정
+
+| ID | 결정 | 내용 |
+|---|---|---|
+| D49 | 체크리스트 템플릿 | `src/content/checklists/{new-grad,second-new-grad,it-career}.json` 정적 관리. 항목은 목표 입사 월 기준 `offset_months`, 각 템플릿에 `version`·`last_reviewed`. 빌드 시 번들, 테스트에서 스키마·id 중복 검증 |
+| D50 | 체크리스트 재생성 | 사용자당 활성 체크리스트 1개. 목표 시기·유형을 바꿔 다시 만들면 이전 것을 지우되 같은 `template_item_id` 의 완료 표시는 유지 |
+| D51 | 마감 임박 | 미완료 + (지남 또는 14일 이내). 날짜는 한국 시간 기준 |
+| D52 | 비자 고지 | 체크리스트 상단에 "일반 정보이며 최종 확인은 출입국재류관리청·고용주 안내를 따를 것" 상시 표시 |
+| D53 | 검수 처리 | 운영자는 검수 시작(in_review) → 코멘트(필수)·ES 수정본(선택, `source=admin` 새 버전) → 완료 시 사용자에게 이메일. 이메일 실패해도 검수 완료는 유지하고 `email_log`·`notified_at` 으로 추적 |
+| D54 | 이메일 | `EmailProvider` 인터페이스(Resend REST / 콘솔). 로그에는 수신 도메인만 저장. 관리자 화면의 이메일 표시는 service_role 로 auth 사용자 조회 |
+| D55 | 관리자 데이터 접근 | 검수 대상 내용은 사용자 세션 RLS(admin_can_view*)로 읽어 범위를 DB가 강제. service_role 은 이메일 조회·발송 로그 등 필요한 곳에만 |

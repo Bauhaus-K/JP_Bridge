@@ -27,6 +27,7 @@ type Props = {
   reviewRating: number | null;
   openReviewRequest: boolean;
   reviewRemaining: number;
+  adminComment: string | null;
 };
 
 type Phase =
@@ -155,6 +156,12 @@ export function EsWorkspace(props: Props) {
   return (
     <div className="grid gap-6 lg:grid-cols-2">
       <section aria-labelledby="editor-heading" className="grid content-start gap-3">
+        {props.adminComment ? (
+          <Alert variant="info" data-testid="admin-comment">
+            <p className="font-medium">운영자 검수 코멘트</p>
+            <p className="mt-1 whitespace-pre-wrap">{props.adminComment}</p>
+          </Alert>
+        ) : null}
         <div className="flex items-baseline justify-between gap-2">
           <h2 id="editor-heading" className="text-lg font-semibold">
             초안

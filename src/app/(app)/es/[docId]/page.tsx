@@ -53,6 +53,13 @@ export default async function EsDetailPage({ params, searchParams }: PageProps<"
       (r) => r.target_id === selected.id && (r.status === "pending" || r.status === "in_review"),
     ),
   );
+  const doneRequest = selected
+    ? requests.find(
+        (r) =>
+          r.status === "done" &&
+          (r.target_id === selected.id || r.admin_version_id === selected.id),
+      )
+    : undefined;
   const questionLabel =
     QUESTION_TYPE_OPTIONS.find((q) => q.value === doc.question_type)?.label ?? "";
 
@@ -95,6 +102,7 @@ export default async function EsDetailPage({ params, searchParams }: PageProps<"
           review={review}
           reviewRating={review ? (ratings[review.aiVersionId] ?? null) : null}
           openReviewRequest={openReviewRequest}
+          adminComment={doneRequest?.admin_comment ?? null}
           reviewRemaining={quota ? Math.max(quota.review_limit - quota.review_used, 0) : 0}
         />
         <aside className="grid content-start gap-3">

@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireOnboarded } from "@/lib/auth/session";
+import { getUpcomingItems } from "@/lib/checklist/queries";
+import { dueLabel, dueStatus, todayKst } from "@/lib/checklist/schedule";
 import { formatYearMonthKo, monthsUntil } from "@/lib/dates";
 import { FEATURES } from "@/lib/features";
 import { cn } from "@/lib/utils";
@@ -27,6 +29,8 @@ export default async function DashboardPage() {
   const persona = PERSONA_OPTIONS.find((p) => p.value === profile.persona_type)?.label ?? "-";
   const jlpt = JLPT_OPTIONS.find((j) => j.value === profile.jlpt_level)?.label ?? "-";
   const features = FEATURES.filter((f) => f.key !== "dashboard");
+  const upcoming = await getUpcomingItems();
+  const today = todayKst();
 
   return (
     <div className="grid gap-6">
@@ -85,9 +89,31 @@ export default async function DashboardPage() {
             <CardDescription>2주 안에 마감되는 일정·서류·비자 준비 항목</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
-              체크리스트 기능이 준비되면 목표 입사 시기에 맞춘 마감 항목이 여기에 표시됩니다.
-            </p>
+            {upcoming.length ? (
+              <ul className="grid gap-2" data-testid="upcoming-items">
+                {upcoming.map((item) => (
+                  <li key={item.id} className="flex items-start justify-between gap-2 text-sm">
+                    <span>{item.title}</span>
+                    <Badge
+                      variant={dueStatus(item, today) === "overdue" ? "default" : "warning"}
+                      className="shrink-0"
+                    >
+                      {dueLabel(item.due_date, today)}
+                    </Badge>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+                2주 안에 마감되는 항목이 없습니다.
+              </p>
+            )}
+            <Link
+              href="/checklist"
+              className="mt-3 inline-block text-sm text-primary underline-offset-4 hover:underline"
+            >
+              체크리스트 전체 보기
+            </Link>
           </CardContent>
         </Card>
       </div>

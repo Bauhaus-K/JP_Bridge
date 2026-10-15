@@ -2,7 +2,9 @@ import { expect, test } from "@playwright/test";
 
 import { completeOnboarding, loginWithMagicLink, uniqueEmail } from "./helpers";
 
-test("모의면접: 질문 생성 → 답변·피드백 → 꼬리질문 → 리포트 → 검수 요청", async ({ page }, testInfo) => {
+test("모의면접: 질문 생성 → 답변·피드백 → 꼬리질문 → 리포트 → 검수 요청", async ({
+  page,
+}, testInfo) => {
   test.setTimeout(90_000);
   await loginWithMagicLink(page, uniqueEmail(`iv-${testInfo.project.name}`));
   await completeOnboarding(page, "한서윤");
@@ -22,7 +24,9 @@ test("모의면접: 질문 생성 → 답변·피드백 → 꼬리질문 → 리
   await expect(page.getByText("결론을 먼저 말하고 구체적인 행동을 덧붙이세요.")).toBeVisible();
 
   // 1번 답변 → 피드백 + 꼬리질문
-  await page.getByLabel("내 답변").fill("韓国の大学で経営学を専攻しているキムと申します。御社で頑張りたいと思います。");
+  await page
+    .getByLabel("내 답변")
+    .fill("韓国の大学で経営学を専攻しているキムと申します。御社で頑張りたいと思います。");
   await page.getByRole("button", { name: "답변 제출" }).click();
   const fb = page.getByTestId("interview-feedback");
   await expect(fb).toBeVisible({ timeout: 30_000 });
@@ -44,7 +48,9 @@ test("모의면접: 질문 생성 → 답변·피드백 → 꼬리질문 → 리
   await page.getByRole("button", { name: "면접 종료하고 리포트 받기" }).click();
   const report = page.getByTestId("interview-report");
   await expect(report).toBeVisible({ timeout: 30_000 });
-  await expect(report.getByText("결론을 먼저 말하는 구조가 좋았습니다", { exact: false })).toBeVisible();
+  await expect(
+    report.getByText("결론을 먼저 말하는 구조가 좋았습니다", { exact: false }),
+  ).toBeVisible();
   await expect(report.getByText("あなたの弱みは何ですか。")).toBeVisible();
   await expect(page.getByText(/점|合格/).filter({ hasText: /\d+점/ })).toHaveCount(0);
 

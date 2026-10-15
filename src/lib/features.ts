@@ -74,7 +74,7 @@ export const FEATURES: Feature[] = [
     shortLabel: "체크",
     description: "일정·서류·비자 준비 항목",
     icon: ClipboardList,
-    available: false,
+    available: true,
     mobileTab: true,
   },
 ];
