@@ -1,0 +1,159 @@
+{
+  "id": "new-grad",
+  "version": "2026-10",
+  "last_reviewed": "2026-10-18",
+  "title": "新卒(신졸) 일본 취업 체크리스트",
+  "personas": ["new_grad"],
+  "note": "일본 대기업 신졸 채용의 일반적인 일정(4월 입사 기준)입니다. 외자계·IT·벤처는 통년 채용이 많아 일정이 다를 수 있습니다.",
+  "items": [
+    {
+      "id": "self-analysis",
+      "category": "schedule",
+      "offset_months": -22,
+      "title": "자기분석·업계 연구 시작 (自己分析・業界研究)",
+      "description": "관심 업계와 직종을 좁히고, 학창 시절 경험을 에피소드 카드로 정리합니다."
+    },
+    {
+      "id": "summer-intern",
+      "category": "schedule",
+      "offset_months": -21,
+      "title": "여름 인턴십 지원 (サマーインターン)",
+      "description": "보통 6~7월에 ES 마감이 몰립니다. 인턴 참가가 조기 선고로 이어지는 경우가 많습니다."
+    },
+    {
+      "id": "spi",
+      "category": "schedule",
+      "offset_months": -15,
+      "title": "SPI·웹테스트 준비",
+      "description": "SPI, 玉手箱 등 적성검사는 언어·비언어(수리)로 구성됩니다. 문제집 1권을 반복해 두세요."
+    },
+    {
+      "id": "winter-intern",
+      "category": "schedule",
+      "offset_months": -16,
+      "title": "가을·겨울 인턴십 / 해외 취업 박람회",
+      "description": "가을·겨울 인턴과 조기 선고가 진행됩니다. 해외 유학생 대상 커리어 포럼(예: 11월)도 확인하세요."
+    },
+    {
+      "id": "entry",
+      "category": "schedule",
+      "offset_months": -13,
+      "title": "엔트리 시작 (広報解禁・エントリー)",
+      "description": "일반적으로 졸업 전년도 3월에 기업 설명회와 엔트리가 본격 시작됩니다."
+    },
+    {
+      "id": "es-deadline",
+      "category": "schedule",
+      "offset_months": -12,
+      "title": "주요 기업 ES 마감 집중기",
+      "description": "3~5월에 ES 마감이 집중됩니다. ES 첨삭으로 自己PR·ガクチカ·志望動機를 미리 다듬어 두세요."
+    },
+    {
+      "id": "interview",
+      "category": "schedule",
+      "offset_months": -10,
+      "title": "면접 집중기 (選考)",
+      "description": "일반적으로 6월부터 면접이 본격화됩니다. 모의면접으로 1차·최종 면접을 연습하세요."
+    },
+    {
+      "id": "naitei",
+      "category": "schedule",
+      "offset_months": -6,
+      "title": "내정식 (内定式)",
+      "description": "많은 기업이 10월 1일 전후로 내정식을 엽니다. 입사 서류와 비자 일정을 회사와 확인하세요."
+    },
+    {
+      "id": "pre-join",
+      "category": "schedule",
+      "offset_months": -1,
+      "title": "입사 준비 (주거·항공권·연수)",
+      "description": "기숙사·사택 여부, 입국일, 입사 전 연수 일정을 확인합니다."
+    },
+
+    {
+      "id": "rirekisho",
+      "category": "documents",
+      "offset_months": -13,
+      "title": "일본식 이력서 작성 (履歴書)",
+      "description": "학력·자격·지원 동기를 일본식 양식에 맞춰 작성합니다. 서명·날짜 형식에 주의하세요."
+    },
+    {
+      "id": "photo",
+      "category": "documents",
+      "offset_months": -13,
+      "title": "증명사진 촬영 (証明写真)",
+      "description": "일본 이력서 규격(보통 세로 4cm × 가로 3cm)으로 준비합니다."
+    },
+    {
+      "id": "certificates",
+      "category": "documents",
+      "offset_months": -12,
+      "title": "졸업예정·성적 증명서 발급 (영문)",
+      "description": "영문 졸업예정증명서와 성적증명서를 여유 있게 발급해 둡니다. 기업에 따라 일본어 번역을 요구할 수 있습니다."
+    },
+    {
+      "id": "jlpt",
+      "category": "documents",
+      "offset_months": -12,
+      "title": "JLPT 등 어학 성적 증명서 준비",
+      "description": "JLPT 인정결과 및 성적증명서, TOEIC 등 제출 가능한 성적을 정리합니다."
+    },
+    {
+      "id": "diploma",
+      "category": "documents",
+      "offset_months": -2,
+      "title": "졸업증명서·학위증명서 발급",
+      "description": "졸업 후 비자 서류(학위 증명)로 필요합니다. 회사 안내에 따라 원본·사본·번역본을 준비합니다."
+    },
+
+    {
+      "id": "visa-fit",
+      "category": "visa",
+      "offset_months": -10,
+      "title": "전공과 직무의 관련성 확인",
+      "description": "취업비자(技術・人文知識・国際業務)는 일반적으로 학위와 업무 내용의 관련성을 봅니다. 지원 직무와 전공의 연결을 설명할 수 있게 정리하세요."
+    },
+    {
+      "id": "passport",
+      "category": "visa",
+      "offset_months": -6,
+      "title": "여권 유효기간 확인",
+      "description": "입국 시점에 유효기간이 충분한지 확인하고 필요하면 재발급합니다."
+    },
+    {
+      "id": "coe-start",
+      "category": "visa",
+      "offset_months": -5,
+      "title": "회사와 비자 절차 확인 (在留資格認定証明書)",
+      "description": "재류자격인정증명서(COE)는 보통 회사(또는 대리인)가 일본 출입국재류관리청에 신청합니다. 필요한 서류와 일정을 회사에 확인하세요."
+    },
+    {
+      "id": "coe-docs",
+      "category": "visa",
+      "offset_months": -4,
+      "title": "비자 신청 서류 제출",
+      "description": "회사가 요청한 서류(학위·졸업 증명, 사진, 여권 사본 등)를 제출합니다."
+    },
+    {
+      "id": "coe-wait",
+      "category": "visa",
+      "offset_months": -3,
+      "title": "COE 발급 대기",
+      "description": "심사에는 보통 1~3개월이 걸립니다. 발급 후 정해진 기간 안에 입국해야 하므로 유효기간을 확인하세요."
+    },
+    {
+      "id": "visa-apply",
+      "category": "visa",
+      "offset_months": -1,
+      "title": "주한 일본 공관에 사증 신청",
+      "description": "COE를 받은 뒤 주한 일본대사관·총영사관에 사증(비자)을 신청합니다."
+    },
+    {
+      "id": "residence-card",
+      "category": "visa",
+      "offset_months": 0,
+      "title": "입국 후 재류카드 수령·주소 신고",
+      "description": "입국 시 재류카드(在留カード)를 받고, 거주지가 정해지면 정해진 기간 안에 구청·시청에 전입 신고를 합니다."
+    }
+  ]
+}
