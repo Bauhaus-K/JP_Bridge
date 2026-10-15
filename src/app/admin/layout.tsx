@@ -7,7 +7,8 @@ import { requireAdmin } from "@/lib/auth/session";
 const NAV = [
   { href: "/admin", label: "개요" },
   { href: "/admin/reviews", label: "검수 큐" },
-  { href: "/admin/users", label: "사용자" },
+  { href: "/admin/users", label: "사용자·플랜" },
+  { href: "/admin/metrics", label: "지표" },
 ];
 
 export default async function AdminLayout({ children }: LayoutProps<"/admin">) {

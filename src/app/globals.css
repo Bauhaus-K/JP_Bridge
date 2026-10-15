@@ -24,6 +24,10 @@
   --border: oklch(0.9 0.01 260);
   --input: oklch(0.86 0.01 260);
   --ring: oklch(0.55 0.17 265);
+  /* 차트 전용: dataviz 검증 통과 값 (light L 0.45 / dark L 0.64, 표면 대비 ≥ 3:1) */
+  --chart-1: oklch(0.45 0.17 265);
+  --chart-track: oklch(0.93 0.03 265);
+  --chart-grid: oklch(0.92 0.005 260);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -47,6 +51,9 @@
     --border: oklch(0.32 0.02 260);
     --input: oklch(0.38 0.02 260);
     --ring: oklch(0.7 0.14 265);
+    --chart-1: oklch(0.64 0.15 265);
+    --chart-track: oklch(0.3 0.05 265);
+    --chart-grid: oklch(0.28 0.015 260);
   }
 }
 
@@ -70,6 +77,9 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-track: var(--chart-track);
+  --color-chart-grid: var(--chart-grid);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);

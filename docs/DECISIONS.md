@@ -90,3 +90,13 @@ PRD의 모호한 부분을 기본값으로 정한 내역입니다. 되돌리기 
 | D53 | 검수 처리 | 운영자는 검수 시작(in_review) → 코멘트(필수)·ES 수정본(선택, `source=admin` 새 버전) → 완료 시 사용자에게 이메일. 이메일 실패해도 검수 완료는 유지하고 `email_log`·`notified_at` 으로 추적 |
 | D54 | 이메일 | `EmailProvider` 인터페이스(Resend REST / 콘솔). 로그에는 수신 도메인만 저장. 관리자 화면의 이메일 표시는 service_role 로 auth 사용자 조회 |
 | D55 | 관리자 데이터 접근 | 검수 대상 내용은 사용자 세션 RLS(admin_can_view*)로 읽어 범위를 DB가 강제. service_role 은 이메일 조회·발송 로그 등 필요한 곳에만 |
+
+## MS6 결정
+
+| ID | 결정 | 내용 |
+|---|---|---|
+| D56 | 결제 | `PaymentProvider` 인터페이스(activate/cancel) + `ManualPaymentProvider`(운영자 수동 활성화, service_role 로 subscriptions 기록). `TossPaymentProvider` 는 빌링 연동 절차를 주석으로 남긴 스텁. 사업자 계약·키 발급 후 구현 |
+| D57 | 업그레이드 신청 | 사용자는 `plan_requests` 로 프로를 신청(대기 1건 제한, 직접 승인 불가, 취소 가능) → 운영자에게 이메일 → 운영자가 1/3/6/12개월 활성화(남은 기간에 이어 연장) → 사용자에게 이메일 |
+| D58 | 지표 집계 | `admin_metrics()` SQL 함수(service_role 전용)가 가입·WAU·유료·주별 가입·기능별 사용량·만족도·검수·리퍼럴을 한 번에 집계. 서버가 requireAdmin 후 호출 |
+| D59 | 지표 시각화 | KPI 는 스탯 타일, 유료 목표(30명)는 히어로 숫자 + 미터, 주별 가입은 단일 색 세로 막대(호버·포커스 툴팁 + 표 보기), 기능별 사용량은 표 + 인라인 막대. 차트 색 `--chart-1` 은 검증 스크립트로 라이트/다크 밝기 대역·대비 통과 값 사용 |
+| D60 | WAU 정의 | 최근 7일 `events` 또는 `ai_runs` 에 기록이 있는 고유 사용자 |

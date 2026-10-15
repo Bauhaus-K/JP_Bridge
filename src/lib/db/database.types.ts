@@ -32,6 +32,22 @@ export type QuotaStatus = {
   review_used: number;
 };
 
+export type AdminMetrics = {
+  generated_at: string;
+  signups_total: number;
+  onboarded_total: number;
+  signups_7d: number;
+  signups_prev_7d: number;
+  wau: number;
+  paid_active: number;
+  plan_requests_pending: number;
+  weekly_signups: { week_start: string; count: number }[];
+  feature_usage: { feature: string; week_start: string; count: number }[];
+  satisfaction: { feature: string; phase: "before" | "after"; avg: number; n: number }[];
+  reviews: { pending: number; in_review: number; done_30d: number };
+  referrals: { consented: number; sent: number; revoked: number; offers: number; hired: number };
+};
+
 export type RequestReviewResult = {
   ok: boolean;
   reason: "limit" | "not_found" | "duplicate" | null;
@@ -95,6 +111,7 @@ export type Database = {
           name: string;
           daily_ai_limit: number;
           per_minute_ai_limit: number;
+          daily_chat_limit: number;
           monthly_review_limit: number;
           price_krw: number;
           sort_order: number;
@@ -324,6 +341,52 @@ export type Database = {
         Update: never;
         Relationships: [];
       };
+      subscriptions: {
+        Row: {
+          id: string;
+          user_id: string;
+          plan_code: string;
+          provider: "manual" | "toss";
+          provider_ref: string | null;
+          status: "active" | "cancelled" | "expired";
+          period_start: string;
+          period_end: string | null;
+          activated_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          plan_code: string;
+          provider?: "manual" | "toss";
+          provider_ref?: string | null;
+          status?: "active" | "cancelled" | "expired";
+          period_start?: string;
+          period_end?: string | null;
+          activated_by?: string | null;
+        };
+        Update: { status?: "active" | "cancelled" | "expired"; period_end?: string | null };
+        Relationships: [];
+      };
+      plan_requests: {
+        Row: {
+          id: string;
+          user_id: string;
+          plan_code: string;
+          message: string | null;
+          status: "pending" | "approved" | "rejected" | "cancelled";
+          handled_by: string | null;
+          handled_at: string | null;
+          created_at: string;
+        };
+        Insert: { user_id?: string; plan_code: string; message?: string | null };
+        Update: {
+          status?: "pending" | "approved" | "rejected" | "cancelled";
+          handled_by?: string | null;
+          handled_at?: string | null;
+        };
+        Relationships: [];
+      };
       es_documents: {
         Row: {
           id: string;
@@ -488,6 +551,7 @@ export type Database = {
       consume_ai_quota: { Args: { p_kind?: "ai" | "chat" }; Returns: QuotaResult };
       refund_ai_quota: { Args: { p_user: string; p_kind?: "ai" | "chat" }; Returns: undefined };
       my_quota_status: { Args: Record<string, never>; Returns: QuotaStatus };
+      admin_metrics: { Args: Record<string, never>; Returns: AdminMetrics };
       request_review: {
         Args: { p_target_type: ReviewTargetType; p_target_id: string; p_note?: string | null };
         Returns: RequestReviewResult;

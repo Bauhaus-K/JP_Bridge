@@ -1,4 +1,4 @@
-import { LogOut, Shield } from "lucide-react";
+import { LogOut, Settings, Shield } from "lucide-react";
 import Link from "next/link";
 
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -37,6 +37,14 @@ export function AppShell({ displayName, isAdmin, children }: AppShellProps) {
             <span className="hidden max-w-40 truncate px-2 text-sm text-muted-foreground sm:inline">
               {displayName ? `${displayName}님` : null}
             </span>
+            <Link
+              href="/settings"
+              aria-label="설정"
+              className={buttonVariants({ variant: "ghost", size: "sm" })}
+            >
+              <Settings aria-hidden="true" />
+              <span className="hidden sm:inline">설정</span>
+            </Link>
             <form action="/auth/signout" method="post">
               <Button type="submit" variant="ghost" size="sm" aria-label="로그아웃">
                 <LogOut aria-hidden="true" />

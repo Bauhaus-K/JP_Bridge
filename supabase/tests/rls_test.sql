@@ -301,6 +301,38 @@ select test_util.assert(
 reset role;
 
 
+-- 10. 플랜 신청 / 지표 ------------------------------------------------------------
+insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000000d1', 'd@example.com');
+select test_util.login('00000000-0000-0000-0000-0000000000d1');
+insert into public.plan_requests (plan_code, message) values ('pro', '프로 신청');
+do $$ begin
+  insert into public.plan_requests (plan_code) values ('pro');
+  raise exception 'ASSERTION FAILED: second pending plan request allowed';
+exception when unique_violation then null;
+end $$;
+do $$ begin
+  update public.plan_requests set status = 'approved' where user_id = auth.uid();
+  if found then raise exception 'ASSERTION FAILED: user approved own plan request'; end if;
+exception when insufficient_privilege then null;
+end $$;
+update public.plan_requests set status = 'cancelled' where user_id = auth.uid() and status = 'pending';
+select test_util.assert((select count(*) = 1 from public.plan_requests where status = 'cancelled'), 'user cancels own pending request');
+do $$ begin
+  insert into public.plan_requests (plan_code) values ('free');
+  raise exception 'ASSERTION FAILED: free plan request allowed';
+exception when insufficient_privilege then null;
+end $$;
+do $$ begin
+  perform public.admin_metrics();
+  raise exception 'ASSERTION FAILED: user executed admin_metrics';
+exception when insufficient_privilege then null;
+end $$;
+reset role;
+select test_util.assert(
+  (select jsonb_array_length(public.admin_metrics() -> 'weekly_signups') = 8
+      and (public.admin_metrics() ->> 'signups_total')::int >= 1),
+  'admin_metrics aggregates');
+
 -- 9. 함수 실행 권한 회귀 방지 --------------------------------------------------
 -- anon 은 어떤 security definer 함수도 실행할 수 없다.
 select test_util.assert(
