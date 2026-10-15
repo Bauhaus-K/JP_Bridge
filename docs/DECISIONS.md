@@ -115,3 +115,12 @@ PRD의 모호한 부분을 기본값으로 정한 내역입니다. 되돌리기 
 | D68 | 데이터 내보내기 | `/api/account/export`: 사용자 테이블은 RLS 로, 이벤트·AI 실행 메타데이터는 service_role 로 본인 것만 모아 JSON 다운로드 |
 | D69 | 계정 삭제 | '탈퇴' 입력 확인 → 리퍼럴 철회 → `auth.admin.deleteUser` (모든 사용자 데이터 cascade, 동의 로그는 가명화 보관) → 로그아웃 |
 | D70 | 보관 기한 파기 | `purge_expired_consents()`(service_role 전용)를 주기 실행 (배포 가이드에 pg_cron 예시) |
+
+## MS8 결정
+
+| ID | 결정 | 내용 |
+|---|---|---|
+| D71 | 접근성 기준 | axe-core 로 WCAG 2.1 A/AA 자동 검사를 E2E 에 포함(공개·사용자·운영자 화면 약 20개, 모바일·데스크톱). 위반 0건을 통과 기준으로 함. 키보드: 본문 건너뛰기 링크, 메뉴 포커스·진입 |
+| D72 | 성능 | 로컬 프로덕션 빌드 기준 주요 화면 load 0.2~0.4초, 화면별 추가 JS 2~121KB, 무거운 클라이언트 라이브러리 없음. `loading.tsx` 골격은 도입했다가 제거: 서버 액션 `redirect` 로 다른 route group(온보딩→대시보드)에 들어갈 때 URL 만 바뀌고 화면이 갱신되지 않는 문제를 E2E 에서 확인 (Next 16.4). 재도입 시 이 시나리오 E2E 로 검증할 것 |
+| D73 | 보안 헤더 | X-Content-Type-Options, Referrer-Policy, X-Frame-Options, Permissions-Policy, HSTS 적용. CSP 는 nonce 설정과 함께 후속 도입 |
+| D74 | E2E CI | GitHub Actions 에서 경량 스택(`scripts/lite-stack.sh`) + 목 Anthropic 서버로 전체 E2E 실행 (`.github/workflows/e2e.yml`, 리퍼럴 플래그 ON) |

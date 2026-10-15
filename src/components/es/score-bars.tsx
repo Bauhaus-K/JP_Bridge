@@ -13,24 +13,28 @@ export function ScoreBars({ scores }: { scores: EsReview["scores"] }) {
           const s = scores[key];
           return (
             <div key={key} className="grid gap-1">
-              <div className="flex items-center justify-between text-sm">
-                <dt className="font-medium">{SCORE_LABELS[key]}</dt>
-                <dd className="tabular-nums text-muted-foreground">{s.score} / 5</dd>
-              </div>
-              <div
-                role="meter"
-                aria-label={`${SCORE_LABELS[key]} 점수`}
-                aria-valuemin={1}
-                aria-valuemax={5}
-                aria-valuenow={s.score}
-                className="h-2 overflow-hidden rounded-full bg-muted"
-              >
+              <dt className="flex items-center justify-between text-sm font-medium">
+                {SCORE_LABELS[key]}
+                <span className="font-normal tabular-nums text-muted-foreground">
+                  {s.score} / 5
+                </span>
+              </dt>
+              <dd className="grid gap-1">
                 <div
-                  className="h-full rounded-full bg-primary"
-                  style={{ width: `${(s.score / 5) * 100}%` }}
-                />
-              </div>
-              <p className="text-sm text-muted-foreground">{s.comment_ko}</p>
+                  role="meter"
+                  aria-label={`${SCORE_LABELS[key]} 점수`}
+                  aria-valuemin={1}
+                  aria-valuemax={5}
+                  aria-valuenow={s.score}
+                  className="h-2 overflow-hidden rounded-full bg-muted"
+                >
+                  <div
+                    className="h-full rounded-full bg-primary"
+                    style={{ width: `${(s.score / 5) * 100}%` }}
+                  />
+                </div>
+                <p className="text-sm text-muted-foreground">{s.comment_ko}</p>
+              </dd>
             </div>
           );
         })}

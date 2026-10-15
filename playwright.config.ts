@@ -27,13 +27,15 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
     },
     {
-      command: `npm run build && npm run start -- -p ${port}`,
+      // CI 는 빌드를 먼저 끝내고 start 만 실행한다
+      command: process.env.CI ? `npm run start -- -p ${port}` : `npm run build && npm run start -- -p ${port}`,
       port,
       timeout: 240_000,
       reuseExistingServer: !process.env.CI,
       env: {
         ANTHROPIC_BASE_URL: "http://127.0.0.1:4010",
         ANTHROPIC_API_KEY: "e2e-mock-key",
+        FEATURE_REFERRAL: process.env.FEATURE_REFERRAL ?? "false",
       },
     },
   ],

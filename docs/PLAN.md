@@ -9,6 +9,14 @@
 | MS5 | 체크리스트(M7) + 관리자 콘솔·검수 큐(M10) | ✅ 완료 |
 | MS6 | 플랜·한도·수동 결제 활성화(M8) + 지표 대시보드 | ✅ 완료 |
 | MS7 | 리퍼럴·동의(M9, 플래그 OFF) + 삭제·내보내기 + 법적 페이지 | ✅ 완료 |
-| MS8 | E2E 확장, 성능·접근성 점검, Vercel 배포 가이드 | 다음 |
+| MS8 | E2E 확장, 성능·접근성 점검, Vercel 배포 가이드 | ✅ 완료 |
 
 결정 사항은 [DECISIONS.md](./DECISIONS.md), 변경 내역은 [CHANGELOG.md](./CHANGELOG.md) 참고.
+
+## MVP 이후 후보
+
+- 실제 Anthropic API 로 프롬프트 품질 평가(eval 세트) 및 effort 조정
+- 토스페이먼츠 빌링 연동 (`TossPaymentProvider`)
+- 음성 면접 입력 (`AnswerInput` mode="voice")
+- CSP(nonce), 오류 모니터링(Sentry 등)
+- 리퍼럴: 법률 검토 후 동의 문구 확정·플래그 ON, 제휴사 API 연동은 범위 밖

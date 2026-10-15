@@ -48,6 +48,7 @@ export function ColumnChart({
                 className="group relative flex h-full flex-1 items-end justify-center"
               >
                 <span
+                  role="img"
                   tabIndex={0}
                   aria-label={`${d.label}: ${d.value}${valueLabel}`}
                   className="block w-full max-w-10 rounded-t-[4px] bg-chart-1 outline-none ring-ring/50 focus-visible:ring-[3px]"

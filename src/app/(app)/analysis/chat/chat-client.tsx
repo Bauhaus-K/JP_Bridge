@@ -99,32 +99,37 @@ export function ChatClient({
         aria-label="대화"
         className="grid min-h-[60dvh] grid-rows-[1fr_auto] gap-3 rounded-xl border bg-card p-3 sm:p-4"
       >
-        <ol className="grid content-start gap-3 overflow-y-auto" aria-live="polite">
-          {messages.map((m, i) => (
-            <li key={i} className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}>
-              <p
-                className={cn(
-                  "max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-6",
-                  m.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted",
-                )}
+        <div className="grid content-start overflow-y-auto">
+          <ol className="grid content-start gap-3" aria-live="polite">
+            {messages.map((m, i) => (
+              <li
+                key={i}
+                className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}
               >
-                <span className="sr-only">{m.role === "user" ? "나: " : "코치: "}</span>
-                {m.content}
-              </p>
-            </li>
-          ))}
-          {streaming !== null ? (
-            <li className="flex justify-start">
-              <p className="max-w-[85%] whitespace-pre-wrap rounded-2xl bg-muted px-4 py-2.5 text-sm leading-6">
-                <span className="sr-only">코치: </span>
-                {streaming || (
-                  <Loader2 aria-label="코치가 답변을 작성 중" className="size-4 animate-spin" />
-                )}
-              </p>
-            </li>
-          ) : null}
+                <p
+                  className={cn(
+                    "max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-6",
+                    m.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted",
+                  )}
+                >
+                  <span className="sr-only">{m.role === "user" ? "나: " : "코치: "}</span>
+                  {m.content}
+                </p>
+              </li>
+            ))}
+            {streaming !== null ? (
+              <li className="flex justify-start">
+                <p className="max-w-[85%] whitespace-pre-wrap rounded-2xl bg-muted px-4 py-2.5 text-sm leading-6">
+                  <span className="sr-only">코치: </span>
+                  {streaming || (
+                    <Loader2 aria-label="코치가 답변을 작성 중" className="size-4 animate-spin" />
+                  )}
+                </p>
+              </li>
+            ) : null}
+          </ol>
           <div ref={bottomRef} />
-        </ol>
+        </div>
 
         <form
           className="grid gap-2"

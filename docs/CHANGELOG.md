@@ -1,5 +1,19 @@
 # Changelog
 
+## MS8 — E2E·접근성·성능 점검 + 배포 가이드 (2026-10-21)
+
+### 추가
+- 접근성 E2E(axe-core, WCAG 2.1 A/AA): 공개 4개, 사용자 화면 13개(첨삭 결과·비교·대화·면접 진행 포함), 운영자 6개 — 위반 0건. 키보드 시나리오(건너뛰기 링크, 메뉴 이동)
+- HSTS 헤더 (`loading.tsx` 골격은 서버 액션 리다이렉트 화면 갱신 문제로 보류, DECISIONS D72)
+- `docs/DEPLOY.md`: Supabase(서울)·Auth·SMTP·Google·pg_cron, Vercel 환경변수, 배포 후 점검표, 운영 메모
+- E2E GitHub Actions 워크플로(경량 스택 + 목 AI)
+- README 기능 표·테스트 안내 정리
+
+### 수정 (axe 발견)
+- 차트 막대: `aria-label` 에 `role="img"` 추가
+- ES 점수 목록: `dl` 구조(dt/dd) 정정
+- 자기분석 대화 목록: `ol` 안의 비 `li` 요소 제거
+
 ## MS7 — 리퍼럴·동의 + 데이터 삭제·내보내기 + 법적 페이지 (2026-10-20)
 
 ### 추가
