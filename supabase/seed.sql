@@ -1,0 +1,3 @@
+-- 로컬 개발용 시드. plans 는 마이그레이션에서 시드한다.
+-- 예: 개발용 제휴사
+-- insert into public.partners (name, contact_email) values ('Sample Partner KK', 'partner@example.jp');
