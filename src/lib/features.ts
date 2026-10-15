@@ -44,7 +44,7 @@ export const FEATURES: Feature[] = [
     shortLabel: "자기분석",
     description: "대화로 에피소드를 모아 강점 카드로 정리",
     icon: Sparkles,
-    available: false,
+    available: true,
     mobileTab: true,
   },
   {
@@ -64,7 +64,7 @@ export const FEATURES: Feature[] = [
     shortLabel: "경력",
     description: "한국식 경력을 職務経歴書 표현으로",
     icon: Languages,
-    available: false,
+    available: true,
     mobileTab: false,
   },
   {

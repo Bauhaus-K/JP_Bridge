@@ -26,10 +26,13 @@ export type AiRunLog = {
   raw: Json | null;
 };
 
+/** ai: 무거운 작업, chat: 대화 턴 (DECISIONS D35) */
+export type QuotaKind = "ai" | "chat";
+
 export type AiRunnerDeps = {
   client: Pick<Anthropic, "beta">;
-  consumeQuota: () => Promise<QuotaResult>;
-  refundQuota: () => Promise<void>;
+  consumeQuota: (kind: QuotaKind) => Promise<QuotaResult>;
+  refundQuota: (kind: QuotaKind) => Promise<void>;
   logRun: (log: AiRunLog) => Promise<void>;
   now?: () => number;
 };
@@ -41,6 +44,7 @@ export type StructuredRequest<S extends z.ZodType> = {
   system: string;
   userMessage: string;
   schema: S;
+  quotaKind?: QuotaKind;
   /** 스키마 통과 후 추가 검사. 문제 설명(모델에게 전달)을 반환하면 1회 재시도한다. */
   validate?: (data: z.infer<S>) => string | null;
   effort?: "low" | "medium" | "high" | "xhigh" | "max";
@@ -82,22 +86,8 @@ export function createAiRunner(deps: AiRunnerDeps) {
   return async function runStructured<S extends z.ZodType>(
     req: StructuredRequest<S>,
   ): Promise<StructuredResult<z.infer<S>>> {
-    const quota = await deps.consumeQuota();
-    if (!quota.allowed) {
-      await deps.logRun({
-        feature: req.feature,
-        model: req.model,
-        prompt_version: req.promptVersion,
-        input_tokens: null,
-        output_tokens: null,
-        latency_ms: 0,
-        status: "quota_exceeded",
-        error_code: quota.reason,
-        attempt: 0,
-        raw: null,
-      });
-      throw new AiError(quota.reason === "minute" ? "quota_minute" : "quota_day");
-    }
+    const kind = req.quotaKind ?? "ai";
+    await consume(deps, kind, req);
 
     const messages: Anthropic.Beta.BetaMessageParam[] = [
       { role: "user", content: req.userMessage },
@@ -217,7 +207,117 @@ export function createAiRunner(deps: AiRunnerDeps) {
       throw new AiError("validation_failed", lastFailure?.reason);
     } catch (error) {
       // 사용자 책임이 아닌 실패는 사용 횟수를 돌려준다
-      await deps.refundQuota().catch(() => undefined);
+      await deps.refundQuota(kind).catch(() => undefined);
+      throw error instanceof AiError ? error : new AiError(classifyApiError(error), String(error));
+    }
+  };
+}
+
+async function consume(
+  deps: AiRunnerDeps,
+  kind: QuotaKind,
+  req: { feature: string; model: string; promptVersion: string },
+) {
+  const quota = await deps.consumeQuota(kind);
+  if (quota.allowed) return;
+  await deps.logRun({
+    feature: req.feature,
+    model: req.model,
+    prompt_version: req.promptVersion,
+    input_tokens: null,
+    output_tokens: null,
+    latency_ms: 0,
+    status: "quota_exceeded",
+    error_code: quota.reason,
+    attempt: 0,
+    raw: null,
+  });
+  if (quota.reason === "minute") throw new AiError("quota_minute");
+  throw new AiError(kind === "chat" ? "quota_chat_day" : "quota_day");
+}
+
+export type TextStreamRequest = {
+  feature: string;
+  promptVersion: string;
+  model: string;
+  system: string;
+  messages: { role: "user" | "assistant"; content: string }[];
+  quotaKind?: QuotaKind;
+  effort?: "low" | "medium" | "high" | "xhigh" | "max";
+  maxTokens?: number;
+  storeRaw?: boolean;
+  onDelta: (text: string) => void;
+  signal?: AbortSignal;
+};
+
+/** 대화형 텍스트 스트리밍. 한도·로그·환불 규칙은 구조화 호출과 같다. */
+export function createTextStreamer(deps: AiRunnerDeps) {
+  const now = deps.now ?? (() => Date.now());
+
+  return async function streamText(
+    req: TextStreamRequest,
+  ): Promise<{ text: string; model: string }> {
+    const kind = req.quotaKind ?? "chat";
+    await consume(deps, kind, req);
+    const started = now();
+    try {
+      const stream = deps.client.beta.messages.stream(
+        {
+          model: req.model,
+          max_tokens: req.maxTokens ?? 4000,
+          system: [{ type: "text", text: req.system, cache_control: { type: "ephemeral" } }],
+          messages: req.messages,
+          output_config: { effort: req.effort ?? "low" },
+          ...(SERVER_FALLBACK_MODELS.has(req.model)
+            ? { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const }
+            : {}),
+        },
+        { signal: req.signal },
+      );
+      stream.on("text", (delta) => req.onDelta(delta));
+      let message: Anthropic.Beta.BetaMessage;
+      try {
+        message = await stream.finalMessage();
+      } catch (error) {
+        await deps.logRun({
+          feature: req.feature,
+          model: req.model,
+          prompt_version: req.promptVersion,
+          input_tokens: null,
+          output_tokens: null,
+          latency_ms: now() - started,
+          status: "api_error",
+          error_code: classifyApiError(error),
+          attempt: 1,
+          raw: null,
+        });
+        throw new AiError(classifyApiError(error), String(error));
+      }
+      const text = extractText(message);
+      const log = {
+        feature: req.feature,
+        model: message.model,
+        prompt_version: req.promptVersion,
+        input_tokens: message.usage.input_tokens,
+        output_tokens: message.usage.output_tokens,
+        latency_ms: now() - started,
+        attempt: 1,
+        raw: req.storeRaw
+          ? ({ input: req.messages.at(-1)?.content ?? "", output: text } as Json)
+          : null,
+      };
+      if (message.stop_reason === "refusal" || !text.trim()) {
+        await deps.logRun({
+          ...log,
+          status: "api_error",
+          error_code: message.stop_reason === "refusal" ? "refusal" : "empty",
+        });
+        throw new AiError(message.stop_reason === "refusal" ? "refusal" : "validation_failed");
+      }
+      await deps.logRun({ ...log, status: "success", error_code: null });
+      return { text, model: message.model };
+    } catch (error) {
+      await deps.refundQuota(kind).catch(() => undefined);
       throw error instanceof AiError ? error : new AiError(classifyApiError(error), String(error));
     }
   };

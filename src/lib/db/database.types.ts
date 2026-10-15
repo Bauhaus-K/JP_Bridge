@@ -26,6 +26,8 @@ export type QuotaStatus = {
   plan_name: string;
   day_limit: number;
   day_used: number;
+  chat_limit: number;
+  chat_used: number;
   review_limit: number;
   review_used: number;
 };
@@ -99,6 +101,102 @@ export type Database = {
         };
         Insert: never;
         Update: never;
+        Relationships: [];
+      };
+      analysis_conversations: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: { id?: string; user_id?: string; title?: string | null };
+        Update: { title?: string | null; updated_at?: string };
+        Relationships: [];
+      };
+      analysis_messages: {
+        Row: {
+          id: string;
+          conversation_id: string;
+          user_id: string;
+          role: "user" | "assistant";
+          content: string;
+          created_at: string;
+        };
+        Insert: {
+          conversation_id: string;
+          user_id?: string;
+          role: "user" | "assistant";
+          content: string;
+        };
+        Update: never;
+        Relationships: [];
+      };
+      episodes: {
+        Row: {
+          id: string;
+          user_id: string;
+          source_conversation_id: string | null;
+          title: string;
+          situation: string;
+          task: string;
+          action: string;
+          result: string;
+          keywords: string[];
+          strengths: string[];
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id?: string;
+          source_conversation_id?: string | null;
+          title: string;
+          situation?: string;
+          task?: string;
+          action?: string;
+          result?: string;
+          keywords?: string[];
+          strengths?: string[];
+        };
+        Update: {
+          title?: string;
+          situation?: string;
+          task?: string;
+          action?: string;
+          result?: string;
+          keywords?: string[];
+          strengths?: string[];
+        };
+        Relationships: [];
+      };
+      es_document_episodes: {
+        Row: { doc_id: string; episode_id: string; user_id: string };
+        Insert: { doc_id: string; episode_id: string; user_id?: string };
+        Update: never;
+        Relationships: [];
+      };
+      career_translations: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string;
+          input: string;
+          output: Json | null;
+          source: ContentSource;
+          prompt_version: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id?: string;
+          title: string;
+          input: string;
+          output?: Json | null;
+          source?: ContentSource;
+          prompt_version?: string | null;
+        };
+        Update: { title?: string; output?: Json | null };
         Relationships: [];
       };
       es_documents: {
@@ -262,8 +360,8 @@ export type Database = {
     Views: { [_ in never]: never };
     Functions: {
       is_admin: { Args: Record<string, never>; Returns: boolean };
-      consume_ai_quota: { Args: Record<string, never>; Returns: QuotaResult };
-      refund_ai_quota: { Args: { p_user: string }; Returns: undefined };
+      consume_ai_quota: { Args: { p_kind?: "ai" | "chat" }; Returns: QuotaResult };
+      refund_ai_quota: { Args: { p_user: string; p_kind?: "ai" | "chat" }; Returns: undefined };
       my_quota_status: { Args: Record<string, never>; Returns: QuotaStatus };
       request_review: {
         Args: { p_target_type: ReviewTargetType; p_target_id: string; p_note?: string | null };
@@ -288,3 +386,5 @@ export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 export type EsDocument = Database["public"]["Tables"]["es_documents"]["Row"];
 export type EsVersion = Database["public"]["Tables"]["es_versions"]["Row"];
 export type ReviewRequest = Database["public"]["Tables"]["review_requests"]["Row"];
+export type Episode = Database["public"]["Tables"]["episodes"]["Row"];
+export type CareerTranslationRow = Database["public"]["Tables"]["career_translations"]["Row"];

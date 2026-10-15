@@ -234,6 +234,17 @@ exception when insufficient_privilege then null;
 end $$;
 reset role;
 
+-- chat 한도는 ai 한도와 별개로 집계된다
+select test_util.login('00000000-0000-0000-0000-0000000000c1');
+select test_util.assert((select (public.consume_ai_quota('chat') ->> 'allowed')::boolean), 'chat quota independent of ai minute limit');
+select test_util.assert((select (public.my_quota_status() ->> 'chat_used')::int = 1), 'chat usage reported');
+do $$ begin
+  perform public.consume_ai_quota('bogus');
+  raise exception 'ASSERTION FAILED: invalid quota kind accepted';
+exception when invalid_parameter_value then null;
+end $$;
+reset role;
+
 -- 일일 한도: 분 창을 과거로 돌려 분당 제한을 피한 뒤 10회째까지 소비
 update public.usage_counters set window_start = window_start - interval '2 minutes'
   where user_id = '00000000-0000-0000-0000-0000000000c1' and bucket = 'ai_minute';

@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { EsVersion, QuotaStatus, ReviewRequest } from "@/lib/db/database.types";
+import type { Episode, EsVersion, QuotaStatus, ReviewRequest } from "@/lib/db/database.types";
 import { createClient } from "@/lib/db/server";
 
 export async function listEsDocuments() {
@@ -50,4 +50,16 @@ export async function getQuotaStatus(): Promise<QuotaStatus | null> {
   const supabase = await createClient();
   const { data } = await supabase.rpc("my_quota_status");
   return data ?? null;
+}
+
+/** 사용자의 전체 에피소드와 이 문서에 연결된 에피소드 id */
+export async function getEpisodesForDoc(
+  docId: string,
+): Promise<{ episodes: Episode[]; linked: string[] }> {
+  const supabase = await createClient();
+  const [{ data: episodes }, { data: links }] = await Promise.all([
+    supabase.from("episodes").select("*").order("updated_at", { ascending: false }),
+    supabase.from("es_document_episodes").select("episode_id").eq("doc_id", docId),
+  ]);
+  return { episodes: episodes ?? [], linked: (links ?? []).map((l) => l.episode_id) };
 }

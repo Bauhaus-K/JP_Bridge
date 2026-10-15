@@ -54,3 +54,15 @@ PRD의 모호한 부분을 기본값으로 정한 내역입니다. 되돌리기 
 | D32 | 함수 권한 | Supabase 는 public 함수에 anon/authenticated 실행 권한을 기본 부여하므로 `revoke ... from public` 만으로는 부족. 역할을 명시해 회수하고, RLS 테스트에 security definer 함수 실행 권한 허용 목록 검사를 추가 |
 | D33 | AI 목 | E2E 는 Anthropic Messages API SSE 를 흉내 내는 목 서버(`tests/e2e/mock-anthropic.mjs`)에 `ANTHROPIC_BASE_URL` 로 연결. 앱 코드에는 목 분기가 없음 |
 | D34 | 검수 요청 | `request_review` RPC 로만 생성(소유권·중복·월 한도 원자적 검사). 이메일 알림·처리 화면은 MS5 |
+
+## MS3 결정
+
+| ID | 결정 | 내용 |
+|---|---|---|
+| D35 | 한도 2종 | `ai`(ES 첨삭·경력 번역·카드 정리·면접 요약)와 `chat`(자기분석 대화·면접 질문/피드백)을 분리. free: ai 10/일, chat 40/일 · pro: ai 100/일, chat 300/일. chat 분당 10회 |
+| D36 | 자기분석 대화 모델 | 대화 턴은 `ANTHROPIC_MODEL_FAST`(effort low)로 텍스트 스트리밍, 카드 정리는 메인 모델 구조화 출력 |
+| D37 | 실패한 대화 턴 | AI 응답 실패 시 저장했던 사용자 메시지를 삭제(새 대화였다면 대화째 삭제)하고 입력창에 되돌려 재시도 가능하게 함. 사용량은 환불 |
+| D38 | 카드 저장 흐름 | AI가 정리한 카드는 바로 저장하지 않고 사용자가 확인·수정·선택한 뒤 저장. 카드 내용은 한국어 STAR, 키워드는 일본어, 강점은 `日本語(한국어)` |
+| D39 | ES 에피소드 참고 | ES 문서별 최대 5개 카드를 연결(`es_document_episodes`), 첨삭 프롬프트에 "본인이 등록한 사실"로만 전달 |
+| D40 | 경력 번역 저장 | 변환 결과를 `career_translations.output` 에 그대로 저장, 사용자 편집본은 `output.edited_text_ja` 로 추가 저장(원본 구조 보존). 한국 직급은 일본 직급으로 단순 치환하지 않고 "代理（主任〜係長相当）"처럼 보충 + `term_notes` |
+| D41 | 경량 로컬 스택 | Supabase CLI 이미지 일부를 받을 수 없는 환경을 위해 `scripts/lite-stack.sh` + `scripts/lite-gateway.mjs` 제공 (Postgres·GoTrue·PostgREST·Mailpit) |

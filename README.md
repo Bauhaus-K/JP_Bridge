@@ -22,6 +22,8 @@ npm run dev                   # http://localhost:3000
 ```
 
 - 매직링크 메일은 로컬 Mailpit(http://127.0.0.1:54324)에서 확인합니다.
+- `supabase start` 가 이미지 다운로드 제한 등으로 실패하는 환경에서는 경량 스택을 쓸 수 있습니다:
+  `bash scripts/lite-stack.sh up` (Postgres·Auth·REST·Mailpit + 마이그레이션 + `.env.local` 생성) → `node scripts/lite-gateway.mjs`
 - 관리자 계정: `.env.local` 의 `ADMIN_EMAILS` 에 이메일을 넣고 로그인하면 `admin` 역할로 동기화됩니다.
 - Google 로그인(선택): `supabase/config.toml` 의 `[auth.external.google] enabled = true` 와 `SUPABASE_AUTH_EXTERNAL_GOOGLE_*` 설정.
 

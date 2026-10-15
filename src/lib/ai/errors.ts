@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 
 export type AiErrorCode =
   | "quota_day"
+  | "quota_chat_day"
   | "quota_minute"
   | "ai_busy"
   | "network"
@@ -14,6 +15,8 @@ export type AiErrorCode =
 const MESSAGES: Record<AiErrorCode, string> = {
   quota_day:
     "오늘 사용할 수 있는 AI 코칭 횟수를 모두 사용했습니다. 내일 다시 이용하거나 프로 플랜을 이용해 주세요.",
+  quota_chat_day:
+    "오늘 사용할 수 있는 대화형 코칭 횟수를 모두 사용했습니다. 내일 다시 이용하거나 프로 플랜을 이용해 주세요.",
   quota_minute: "요청이 너무 잦습니다. 1분 정도 기다린 뒤 다시 시도해 주세요.",
   ai_busy:
     "AI 서버가 혼잡합니다. 잠시 후 다시 시도해 주세요. 이번 요청은 사용 횟수에서 차감되지 않았습니다.",

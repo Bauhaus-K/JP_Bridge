@@ -78,6 +78,22 @@ export async function getEsDocument(docId: string): Promise<EsDocument | null> {
   return data;
 }
 
+async function getLinkedEpisodes(docId: string) {
+  const supabase = await createClient();
+  const { data: links } = await supabase
+    .from("es_document_episodes")
+    .select("episode_id")
+    .eq("doc_id", docId);
+  const ids = (links ?? []).map((l) => l.episode_id);
+  if (ids.length === 0) return [];
+  const { data } = await supabase
+    .from("episodes")
+    .select("title, situation, task, action, result")
+    .in("id", ids)
+    .limit(5);
+  return data ?? [];
+}
+
 /** ES 초안을 AI로 첨삭하고, 결과를 'ai' 출처 버전으로 기록한다. */
 export async function reviewEsDraft(params: {
   userId: string;
@@ -90,6 +106,7 @@ export async function reviewEsDraft(params: {
 }): Promise<EsReviewView> {
   const { doc, profile } = params;
   const charLimit = doc.char_limit;
+  const episodes = await getLinkedEpisodes(doc.id);
 
   const result = await runStructuredForUser(params.userId, {
     feature: "es_review",
@@ -108,6 +125,7 @@ export async function reviewEsDraft(params: {
         desiredRoles: profile.desired_roles,
         jlptLevel: profile.jlpt_level,
       },
+      episodes,
     }),
     schema: esReviewSchema,
     validate: (data) => {

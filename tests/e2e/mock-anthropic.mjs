@@ -39,6 +39,57 @@ function esReview(userText) {
   };
 }
 
+function episodeExtraction(userText) {
+  const said = [...userText.matchAll(/USER: ([^\n]+)/g)].map((m) => m[1]).join(" ");
+  return {
+    episodes: [
+      {
+        title: "동아리 신입 정착 프로그램",
+        situation: said.slice(0, 120) || "동아리 활동",
+        task: "신입 부원의 이탈을 줄이는 것",
+        action: "선배와 신입을 1:1로 연결하는 제도를 제안하고 운영",
+        result: "그 해 이탈자가 거의 없었음 (구체적 인원은 미확인)",
+        keywords: ["新入部員の定着", "メンター制度"],
+        strengths: ["主体性(주체성)", "課題解決力(과제 해결력)"],
+      },
+    ],
+    missing_info_ko: ["이탈자가 이전에는 몇 명 정도였나요?"],
+  };
+}
+
+function careerTranslation(userText) {
+  const company = /<career>\n([^\s(]+)/.exec(userText)?.[1] ?? "○○社";
+  return {
+    shokumu_youyaku_ja:
+      "韓国のIT企業にて約3年間、社内業務システムの開発・保守に従事してまいりました。",
+    shokumu_naiyou: [
+      {
+        period: "2021年3月〜2024年2月",
+        company_ja: `${company}（電子機器メーカー）`,
+        position_ja: "経営支援本部 ITチーム 代理（主任〜係長相当）",
+        duties_ja: [
+          "社内ERPの保守および新規モジュール開発（Java, Spring）",
+          "協力会社ポータル刷新プロジェクトのPL（5名）",
+        ],
+        achievements_ja: ["障害対応プロセスを見直し、月間障害件数を半減"],
+      },
+    ],
+    ikaseru_keiken_ja: ["業務システムの要件整理から開発・運用までの一貫した経験"],
+    chishiki_gijutsu_ja: ["Java / Spring", "Oracle"],
+    term_notes: [
+      {
+        source_ko: "대리",
+        ja: "代理",
+        note_ko: "일본의 주임~계장급에 해당하는 직급으로 보충 설명을 붙였습니다.",
+      },
+    ],
+    questions_ko: ["협력사 포털 리뉴얼의 기간을 알려 주세요."],
+  };
+}
+
+const CHAT_REPLY =
+  "좋은 경험이네요. 그때 직접 어떤 방법을 시도하셨는지 조금 더 자세히 들려주실 수 있을까요?";
+
 function sse(res, model, text, stopReason = "end_turn") {
   res.writeHead(200, { "content-type": "text/event-stream", "cache-control": "no-cache" });
   const send = (event, data) => res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
@@ -110,6 +161,11 @@ const server = http.createServer(async (req, res) => {
     invalidOnceSeen.add(invalidToken);
     return sse(res, body.model, JSON.stringify({ overall_comment_ko: "missing fields" }));
   }
+  const props = body.output_config?.format?.schema?.properties ?? null;
+  if (!props) return sse(res, body.model, CHAT_REPLY);
+  if (props.episodes) return sse(res, body.model, JSON.stringify(episodeExtraction(userText)));
+  if (props.shokumu_youyaku_ja)
+    return sse(res, body.model, JSON.stringify(careerTranslation(userText)));
   return sse(res, body.model, JSON.stringify(esReview(userText)));
 });
 

@@ -158,3 +158,23 @@ export async function deleteEsDocument(formData: FormData): Promise<void> {
   }
   redirect("/es");
 }
+
+export async function setEsEpisodes(formData: FormData): Promise<void> {
+  await requireOnboarded();
+  const docId = z.uuid().safeParse(formData.get("docId"));
+  if (!docId.success) return;
+  const ids = formData
+    .getAll("episodeIds")
+    .map(String)
+    .filter((v) => z.uuid().safeParse(v).success)
+    .slice(0, 5);
+  const supabase = await createClient();
+  await supabase.from("es_document_episodes").delete().eq("doc_id", docId.data);
+  if (ids.length) {
+    await supabase
+      .from("es_document_episodes")
+      .insert(ids.map((episode_id) => ({ doc_id: docId.data, episode_id })));
+  }
+  await trackEvent("es.episodes_linked", { count: ids.length });
+  revalidatePath(`/es/${docId.data}`);
+}

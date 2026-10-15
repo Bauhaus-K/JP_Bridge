@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 
 import { AiError, classifyApiError } from "@/lib/ai/errors";
-import { createAiRunner, type AiRunLog } from "@/lib/ai/runner";
+import { createAiRunner, createTextStreamer, type AiRunLog } from "@/lib/ai/runner";
 import type { QuotaResult } from "@/lib/db/database.types";
 
 /** 러너가 SDK 에 넘기는 요청 중 테스트가 확인하는 부분 */
@@ -229,5 +229,71 @@ describe("classifyApiError", () => {
     [new Error("boom"), "unknown"],
   ])("%s → %s", (error, code) => {
     expect(classifyApiError(error)).toBe(code);
+  });
+});
+
+describe("createTextStreamer", () => {
+  function textSetup(replies: Reply[], quota: QuotaResult = allowed) {
+    const { client, calls } = fakeClient(replies);
+    const logs: AiRunLog[] = [];
+    const kinds: string[] = [];
+    const refund = vi.fn(async (_kind: string) => undefined);
+    const stream = createTextStreamer({
+      client,
+      consumeQuota: async (kind) => {
+        kinds.push(kind);
+        return quota;
+      },
+      refundQuota: refund,
+      logRun: async (l) => {
+        logs.push(l);
+      },
+      now: () => 0,
+    });
+    return { stream, calls, logs, kinds, refund };
+  }
+  const base = {
+    feature: "chat",
+    promptVersion: "chat@1",
+    model: "claude-haiku-5-5",
+    system: "sys",
+    messages: [{ role: "user" as const, content: "안녕" }],
+  };
+
+  it("streams deltas, uses the chat quota and no structured format", async () => {
+    const { stream, calls, logs, kinds } = textSetup([{ text: "좋아요. 어떤 경험인가요?" }]);
+    const deltas: string[] = [];
+    const res = await stream({ ...base, onDelta: (d) => deltas.push(d) });
+    expect(res.text).toBe("좋아요. 어떤 경험인가요?");
+    expect(deltas.join("")).toBe(res.text);
+    expect(kinds).toEqual(["chat"]);
+    expect((calls[0] as SentParams).output_config).toEqual({ effort: "low" });
+    expect(logs[0]).toMatchObject({ status: "success", feature: "chat" });
+  });
+
+  it("maps chat quota exhaustion to the chat message", async () => {
+    const { stream } = textSetup([], {
+      allowed: false,
+      reason: "day",
+      plan: "free",
+      day_limit: 40,
+      day_used: 40,
+    });
+    const err = await stream({ ...base, onDelta: () => undefined }).catch((e) => e);
+    expect(err.code).toBe("quota_chat_day");
+    expect(err.userMessage).toContain("대화형 코칭");
+  });
+
+  it("refunds on refusal or empty output", async () => {
+    const refused = textSetup([{ text: "", stop_reason: "refusal" }]);
+    await expect(refused.stream({ ...base, onDelta: () => undefined })).rejects.toMatchObject({
+      code: "refusal",
+    });
+    expect(refused.refund).toHaveBeenCalledWith("chat");
+
+    const empty = textSetup([{ text: "   " }]);
+    await expect(empty.stream({ ...base, onDelta: () => undefined })).rejects.toMatchObject({
+      code: "validation_failed",
+    });
   });
 });

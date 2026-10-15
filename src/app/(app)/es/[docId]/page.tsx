@@ -3,12 +3,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { EpisodePicker } from "@/components/es/episode-picker";
 import { QuotaBadge } from "@/components/es/quota-badge";
 import { VersionHistory } from "@/components/es/version-history";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   getAfterRatings,
+  getEpisodesForDoc,
   getQuotaStatus,
   listReviewRequests,
   listVersions,
@@ -16,7 +18,7 @@ import {
 import { toReviewView } from "@/lib/es/review-view";
 import { getEsDocument } from "@/lib/es/service";
 import { QUESTION_TYPE_OPTIONS } from "@/lib/validation/es";
-import { deleteEsDocument } from "../actions";
+import { deleteEsDocument, setEsEpisodes } from "../actions";
 import { EsWorkspace } from "./es-workspace";
 
 export const metadata: Metadata = { title: "ES 작성·첨삭" };
@@ -27,7 +29,11 @@ export default async function EsDetailPage({ params, searchParams }: PageProps<"
   const doc = await getEsDocument(docId);
   if (!doc) notFound();
 
-  const [versions, quota] = await Promise.all([listVersions(doc.id), getQuotaStatus()]);
+  const [versions, quota, episodeData] = await Promise.all([
+    listVersions(doc.id),
+    getQuotaStatus(),
+    getEpisodesForDoc(doc.id),
+  ]);
   const selected = versions.find((x) => x.id === v) ?? versions[0] ?? null;
 
   // 선택 버전의 첨삭 결과: AI 버전이면 자기 자신, 사용자 버전이면 그 버전을 첨삭한 최신 AI 버전
@@ -92,6 +98,12 @@ export default async function EsDetailPage({ params, searchParams }: PageProps<"
           reviewRemaining={quota ? Math.max(quota.review_limit - quota.review_used, 0) : 0}
         />
         <aside className="grid content-start gap-3">
+          <EpisodePicker
+            docId={doc.id}
+            episodes={episodeData.episodes}
+            linked={episodeData.linked}
+            action={setEsEpisodes}
+          />
           <h2 className="text-sm font-semibold">버전 히스토리</h2>
           <VersionHistory
             docId={doc.id}

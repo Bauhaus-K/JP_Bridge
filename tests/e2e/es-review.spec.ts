@@ -106,7 +106,8 @@ test("가입 → ES 작성 → AI 첨삭 → 수정본 적용·저장 → 버전
       messages: { content: string }[];
     };
   }[];
-  const last = requests.at(-1)!;
+  // 병렬 실행 중 다른 테스트의 요청이 섞이므로 이 테스트의 요청을 내용으로 찾는다
+  const last = requests.findLast((r) => r.body.messages[0].content.includes("サンプル商事"))!;
   expect(last.body.output_config.format.type).toBe("json_schema");
   expect(last.body.tool_choice).toBeUndefined();
   expect(last.body.stream).toBe(true);
